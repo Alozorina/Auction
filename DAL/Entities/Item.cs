@@ -20,10 +20,10 @@ namespace DAL.Entities
         [Required]
         public int StatusId { get; set; }
         [Required]
-        public string OwnerId { get; set; }
+        public int OwnerId { get; set; }
 
         [Required]
-        public virtual User Owner { get; set; }
+        public virtual Owner Owner { get; set; }
         public virtual User Buyer { get; set; }
         public virtual ICollection<ItemCategory> ItemCategories { get; set; }
         [Required]

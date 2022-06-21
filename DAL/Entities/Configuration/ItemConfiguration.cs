@@ -24,7 +24,7 @@ namespace DAL.Entities.Configuration
                     CurrentBid = 0,
                     StartingPrice = 50m,
                     StatusId = 1,
-                    OwnerId = "a7043b5b-bede-48d7-9d36-c2f632c40f0f"
+                    OwnerId = 1
                 },
                  new Item
                  {
@@ -34,7 +34,7 @@ namespace DAL.Entities.Configuration
                      CurrentBid = 0,
                      StartingPrice = 60m,
                      StatusId = 1,
-                     OwnerId = "618ac316-948e-40de-bfe5-35abb551c95b",
+                     OwnerId = 2
                  }
                 );
         }

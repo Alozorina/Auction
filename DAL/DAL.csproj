@@ -6,44 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20220617133040_Initial.cs" />
-    <Compile Remove="Migrations\20220617133040_Initial.Designer.cs" />
-    <Compile Remove="Migrations\20220617153048_ChangeRole.cs" />
-    <Compile Remove="Migrations\20220617153048_ChangeRole.Designer.cs" />
-    <Compile Remove="Migrations\20220617153710_ChangeRole.cs" />
-    <Compile Remove="Migrations\20220617153710_ChangeRole.Designer.cs" />
-    <Compile Remove="Migrations\20220617160405_ChangeRole.cs" />
-    <Compile Remove="Migrations\20220617160405_ChangeRole.Designer.cs" />
-    <Compile Remove="Migrations\20220617175240_ChangeRole.cs" />
-    <Compile Remove="Migrations\20220617175240_ChangeRole.Designer.cs" />
-    <Compile Remove="Migrations\20220617180651_Initial.cs" />
-    <Compile Remove="Migrations\20220617180651_Initial.Designer.cs" />
-    <Compile Remove="Migrations\20220617184820_FixAspNetUserRoles.cs" />
-    <Compile Remove="Migrations\20220617184820_FixAspNetUserRoles.Designer.cs" />
-    <Compile Remove="Migrations\20220617190443_123.cs" />
-    <Compile Remove="Migrations\20220617190443_123.Designer.cs" />
-    <Compile Remove="Migrations\20220617194803_Initial.cs" />
-    <Compile Remove="Migrations\20220617194803_Initial.Designer.cs" />
-    <Compile Remove="Migrations\20220618130209_Initial.cs" />
-    <Compile Remove="Migrations\20220618130209_Initial.Designer.cs" />
-    <Compile Remove="Migrations\20220618135434_RoleFix.cs" />
-    <Compile Remove="Migrations\20220618135434_RoleFix.Designer.cs" />
-    <Compile Remove="Migrations\20220618184544_123.cs" />
-    <Compile Remove="Migrations\20220618184544_123.Designer.cs" />
-    <Compile Remove="Migrations\20220618194759_AddDataSeed.cs" />
-    <Compile Remove="Migrations\20220618194759_AddDataSeed.Designer.cs" />
-    <Compile Remove="Migrations\20220618195650_AddDataSeed.cs" />
-    <Compile Remove="Migrations\20220618195650_AddDataSeed.Designer.cs" />
-    <Compile Remove="Migrations\20220618200815_AddDataSeed.cs" />
-    <Compile Remove="Migrations\20220618200815_AddDataSeed.Designer.cs" />
-    <Compile Remove="Migrations\20220618201624_AddDataSeed.cs" />
-    <Compile Remove="Migrations\20220618201624_AddDataSeed.Designer.cs" />
-    <Compile Remove="Migrations\20220618202210_AddDataSeed.cs" />
-    <Compile Remove="Migrations\20220618202210_AddDataSeed.Designer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.26" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.26">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -53,6 +15,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.26" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
   </ItemGroup>
 

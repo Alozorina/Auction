@@ -1,12 +1,10 @@
 ﻿using DAL.Entities;
 using DAL.Entities.Configuration;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Data
 {
-    public class AuctionDbContext : IdentityDbContext<User, IdentityRole, string>
+    public class AuctionDbContext : DbContext
     {
         public AuctionDbContext() { }
 
@@ -24,6 +22,9 @@ namespace DAL.Data
         public virtual DbSet<AuctionCategory> AuctionCategories { get; set; }
         public virtual DbSet<Item> Items { get; set; }
         public virtual DbSet<Status> Statuses { get; set; }
+        public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<Owner> Owners { get; set; }
+        public virtual DbSet<Role> Roles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +38,7 @@ namespace DAL.Data
             modelBuilder.ApplyConfiguration(new ItemConfiguration());
             modelBuilder.ApplyConfiguration(new AuctionCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new ItemCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new OwnerConfiguration());
         }
     }
 }
