@@ -12,6 +12,7 @@ namespace DAL.Interfaces
 
         Task<TEntity> GetByIdAsync(int id);
         Task<IEnumerable<TEntity>> FindByPredicateAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
 
         Task AddAsync(TEntity entity);
 

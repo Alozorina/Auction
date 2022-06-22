@@ -62,6 +62,19 @@ namespace DAL.Repositories
             }
         }
 
+        public async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            try
+            {
+                return await dbSet.SingleOrDefaultAsync(predicate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} FirstOrDefaultAsync function error", typeof(GenericRepository<TEntity>));
+                return null;
+            }
+        }
+
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
             try
