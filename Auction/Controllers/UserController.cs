@@ -3,6 +3,7 @@ using BLL;
 using BLL.Models;
 using DAL.Entities;
 using DAL.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Auction.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -28,7 +30,7 @@ namespace Auction.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> Get()
         {
-            var users = await _unitOfWork.UserRepository.GetAllAsync();
+            var users = await _unitOfWork.UserRepository.GetAllWithDetailsAsync();
             _logger.Log(LogLevel.Debug, $"Returned {users.ToList().Count} accounts from database.");
             return Ok(users);
         }
@@ -47,30 +49,35 @@ namespace Auction.Controllers
             return Ok(user);
         }
 
-
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult> Add([FromBody] UserRegistrationModel value)
         {
             if (ModelState.IsValid)
             {
-                User user = new User();
-                try
+                var isEmailExists = await _unitOfWork.UserRepository.IsEmailExists(value.Email);
+                if (!isEmailExists)
                 {
-                    user = _mapper.Map<User>(value);
-                    user.RoleId = 1;
-                    await _unitOfWork.UserRepository.AddAsync(user);
-                    await _unitOfWork.SaveAsync();
+                    User user;
+                    try
+                    {
+                        user = _mapper.Map<User>(value);
+                        user.RoleId = 1;
+                        await _unitOfWork.UserRepository.AddAsync(user);
+                        await _unitOfWork.SaveAsync();
+                    }
+                    catch (AuctionException ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+                    return CreatedAtAction(nameof(GetById), new { user.Id }, user);
                 }
-                catch (AuctionException ex)
-                {
-                    return BadRequest(ex.Message);
-                }
-                return CreatedAtAction(nameof(GetById), new { user.Id }, user);
+                return BadRequest("This email already exists");
             }
             return BadRequest();
         }
 
-
+        [Authorize(Roles = "Admin, User")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(int Id, [FromBody] User value)
         {

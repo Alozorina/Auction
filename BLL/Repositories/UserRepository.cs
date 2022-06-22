@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace DAL.Repositories
@@ -16,13 +17,27 @@ namespace DAL.Repositories
         {
         }
 
+        public async override Task<User> FirstOrDefaultAsync(Expression<Func<User, bool>> predicate)
+        {
+            try
+            {
+                return await dbSet
+                    .Include(u => u.Role)
+                    .SingleOrDefaultAsync(predicate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} FirstOrDefaultAsync function error", typeof(UserRepository));
+                return null;
+            }
+        }
+
         public async Task<IEnumerable<User>> GetAllWithDetailsAsync()
         {
             try
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
-                                .Include(u => u.Role)
                                 .ToListAsync();
             }
             catch (Exception ex)
@@ -38,7 +53,6 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
-                                .Include(u => u.Role)
                                 .SingleOrDefaultAsync(c => c.Id == id);
             }
             catch (Exception ex)

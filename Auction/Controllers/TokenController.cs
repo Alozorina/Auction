@@ -1,4 +1,4 @@
-﻿using DAL.Entities;
+﻿using BLL.Models;
 using DAL.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Auction.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/login")]
     [ApiController]
     public class TokenController : ControllerBase
     {
@@ -24,26 +24,26 @@ namespace Auction.Controllers
             _unitOfWork = unitOfWork;
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> Post(User _userData)
+        public async Task<IActionResult> Post(UserLoginModel _userLoginData)
         {
-            if (_userData != null && _userData.Email != null && _userData.Password != null)
+            if (_userLoginData != null && _userLoginData.Email != null && _userLoginData.Password != null)
             {
-                var user = await _unitOfWork.UserRepository
-                    .FirstOrDefaultAsync(u => u.Email == _userData.Email && u.Password == _userData.Password);
+                var userExists = await _unitOfWork.UserRepository
+                    .FirstOrDefaultAsync(u => u.Email == _userLoginData.Email && u.Password == _userLoginData.Password);
 
-                if (user == null)
-                    return BadRequest("Invalid credentials");
+                if (userExists == null)
+                    return Unauthorized("Invalid credentials");
 
-                //create claims details based on the user information
+                //create claims details based on the userExists information
                 var claims = new[] {
                         new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                        new Claim("Id", user.Id.ToString()),
-                        new Claim("FirstName", user.FirstName),
-                        new Claim("LastName", user.LastName),
-                        new Claim("Email", user.Email)
+                        new Claim("Id", userExists.Id.ToString()),
+                        new Claim("Email", userExists.Email),
+                        new Claim(ClaimsIdentity.DefaultRoleClaimType, userExists.Role.Name.ToString())
                     };
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));

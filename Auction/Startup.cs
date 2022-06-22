@@ -2,13 +2,16 @@ using AutoMapper;
 using BLL;
 using DAL.Data;
 using DAL.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 namespace Auction
 {
@@ -36,11 +39,28 @@ namespace Auction
             services.AddCors(options =>
                 options.AddPolicy(name: "LocalOriginsPolicy",
                                   builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader())
-                );
+            );
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidAudience = Configuration["Jwt:Audience"],
+                    ValidIssuer = Configuration["Jwt:Issuer"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+                };
+            });
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddAutoMapper(c => c.AddProfile<AutomapperProfile>(), typeof(Startup));
-            services.AddControllersWithViews();
+            services.AddControllersWithViews()
+                    .AddNewtonsoftJson(options =>
+                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+                    );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -63,6 +83,8 @@ namespace Auction
             app.UseRouting();
 
             app.UseCors("LocalOriginsPolicy");
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
