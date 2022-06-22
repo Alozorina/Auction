@@ -8,7 +8,8 @@ namespace DAL.Entities.Configuration
         public void Configure(EntityTypeBuilder<Role> builder)
         {
             builder.HasMany(r => r.Users)
-                .WithOne(u => u.Role);
+                .WithOne(u => u.Role)
+                .HasForeignKey(u => u.RoleId);
 
             builder.HasData(
                 new Role

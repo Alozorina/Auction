@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DAL.Entities
 {
@@ -7,10 +6,5 @@ namespace DAL.Entities
     {
         [Required]
         public int Id { get; set; }
-        public Base()
-        {
-            if (Id == 0)
-                Id = Guid.NewGuid().GetHashCode();
-        }
     }
 }

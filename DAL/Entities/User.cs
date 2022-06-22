@@ -10,9 +10,10 @@ namespace DAL.Entities
         [Required(ErrorMessage = "Password is required")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+        [Required]
         public int RoleId { get; set; }
         [DataType(DataType.Date), BirthDate]
-        public DateTime BirthDate { get; set; }
+        public DateTime? BirthDate { get; set; }
 
         public Role Role { get; set; }
         public virtual ICollection<Item> Purchases { get; set; }
