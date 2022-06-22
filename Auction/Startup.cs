@@ -1,15 +1,14 @@
 using AutoMapper;
 using BLL;
 using DAL.Data;
-using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 
 namespace Auction
 {
@@ -29,15 +28,15 @@ namespace Auction
             services.AddDbContext<AuctionDbContext>(opts =>
         opts.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddIdentity<User, IdentityRole>(opt =>
+            services.AddSwaggerGen(c =>
             {
-                opt.Password.RequiredLength = 6;
-                opt.Password.RequireDigit = false;
-                opt.Password.RequireUppercase = false;
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "AuctionApi", Version = "v1" });
+            });
 
-                opt.User.RequireUniqueEmail = true;
-            })
-                .AddEntityFrameworkStores<AuctionDbContext>();
+            services.AddCors(options =>
+                options.AddPolicy(name: "LocalOriginsPolicy",
+                                  builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader())
+                );
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddAutoMapper(c => c.AddProfile<AutomapperProfile>(), typeof(Startup));
@@ -50,6 +49,8 @@ namespace Auction
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AuctionApi v1"));
             }
             else
             {
@@ -61,13 +62,13 @@ namespace Auction
 
             app.UseRouting();
 
+            app.UseCors("LocalOriginsPolicy");
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllers();
             });
         }
     }
