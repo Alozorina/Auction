@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DAL.Repositories
@@ -21,6 +22,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
+                                .Include(u => u.Role)
                                 .ToListAsync();
             }
             catch (Exception ex)
@@ -36,6 +38,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
+                                .Include(u => u.Role)
                                 .SingleOrDefaultAsync(c => c.Id == id);
             }
             catch (Exception ex)
@@ -43,6 +46,12 @@ namespace DAL.Repositories
                 _logger.LogError(ex, "{Repo} GetByIdWithDetailsAsync function error", typeof(UserRepository));
                 return await GetByIdAsync(id);
             }
+        }
+
+        public async Task<bool> IsEmailExists(string email)
+        {
+            var users = await GetAllAsync();
+            return users.Any(u => u.Email == email);
         }
 
         public override async Task UpdateAsync(User entity)
