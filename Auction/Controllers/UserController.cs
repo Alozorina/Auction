@@ -13,13 +13,13 @@ namespace Auction.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UserController : ControllerBase
     {
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
         private readonly IUnitOfWork _unitOfWork;
 
-        public UsersController(ILogger<UsersController> logger, IMapper mapper, IUnitOfWork unitOfWork)
+        public UserController(ILogger<UserController> logger, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _mapper = mapper;
             _logger = logger;
@@ -53,7 +53,7 @@ namespace Auction.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user;
+                User user = new User();
                 try
                 {
                     user = _mapper.Map<User>(value);
