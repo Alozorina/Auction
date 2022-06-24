@@ -38,6 +38,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
+                                .Include(u => u.Role)
                                 .ToListAsync();
             }
             catch (Exception ex)
@@ -53,6 +54,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
+                                .Include(u => u.Role)
                                 .SingleOrDefaultAsync(c => c.Id == id);
             }
             catch (Exception ex)
