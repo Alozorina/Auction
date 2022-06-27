@@ -9,11 +9,9 @@ namespace DAL.Entities
         public string Name { get; set; }
         [MaxLength(1000)]
         public string Description { get; set; }
-        [Required, Range(double.Epsilon, double.MaxValue, ErrorMessage = "Please enter a value bigger than 0")]
-        [DataType(DataType.Currency)]
+        [Required, DataType(DataType.Currency), Range(double.Epsilon, double.MaxValue, ErrorMessage = "Please enter a value bigger than 0")]
         public decimal StartingPrice { get; set; }
-        [Required]
-        [DataType(DataType.Currency)]
+        [Required, DataType(DataType.Currency)]
         public decimal CurrentBid { get; set; }
         [Required]
         public int AuctionId { get; set; }
@@ -21,9 +19,10 @@ namespace DAL.Entities
         public int StatusId { get; set; }
         [Required]
         public int OwnerId { get; set; }
+        public int? BuyerId { get; set; }
 
         [Required]
-        public virtual Owner Owner { get; set; }
+        public virtual User Owner { get; set; }
         public virtual User Buyer { get; set; }
         public virtual ICollection<ItemCategory> ItemCategories { get; set; }
         [Required]

@@ -8,7 +8,7 @@ namespace DAL.Entities
     public class User : Person
     {
         [Required(ErrorMessage = "Password is required")]
-        [DataType(DataType.Password)]
+        [DataType(DataType.Password), StringLength(32, MinimumLength = 6)]
         public string Password { get; set; }
         [Required]
         public int RoleId { get; set; }
@@ -17,5 +17,6 @@ namespace DAL.Entities
 
         public Role Role { get; set; }
         public virtual ICollection<Item> Purchases { get; set; }
+        public virtual ICollection<Item> Lots { get; set; }
     }
 }
