@@ -1,4 +1,5 @@
-﻿using DAL.Data;
+﻿using BLL.Models;
+using DAL.Data;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -76,9 +77,7 @@ namespace DAL.Repositories
             {
                 var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == entity.Id);
 
-                if (existingEntity == null)
-                    dbSet.Add(entity);
-                else
+                if (existingEntity != null)
                 {
                     existingEntity.Id = entity.Id;
                     existingEntity.FirstName = entity.FirstName;
@@ -94,6 +93,44 @@ namespace DAL.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} UpdateAsync function error", typeof(UserRepository));
+            }
+        }
+
+        public async Task UpdatePersonalInfoAsync(int id, UserUpdatePersonalInfoModel model)
+        {
+            try
+            {
+                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == id);
+
+                if (existingEntity != null)
+                {
+                    existingEntity.FirstName = model.FirstName;
+                    existingEntity.LastName = model.LastName;
+                    existingEntity.Password = model.Password;
+                    existingEntity.BirthDate = model.BirthDate;
+                    existingEntity.Email = model.Email;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} UpdatePersonalInfoAsync function error", typeof(UserRepository));
+            }
+        }
+
+        public async Task UpdateRoleId(int userId, int roleId)
+        {
+            try
+            {
+                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == userId);
+
+                if (existingEntity != null)
+                {
+                    existingEntity.RoleId = roleId;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} UpdateRoleId function error", typeof(UserRepository));
             }
         }
     }
