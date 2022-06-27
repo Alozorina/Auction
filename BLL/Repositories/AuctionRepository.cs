@@ -37,6 +37,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(a => a.Items)
+                                    .ThenInclude(i => i.Status)
                                 .Include(a => a.Status)
                                 .Include(a => a.AuctionCategories)
                                 .ToListAsync();
@@ -54,6 +55,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(a => a.Items)
+                                    .ThenInclude(i => i.Status)
                                 .Include(a => a.Status)
                                 .Include(a => a.AuctionCategories)
                                 .SingleOrDefaultAsync(c => c.Id == id);
