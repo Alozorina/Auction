@@ -1,10 +1,13 @@
+using Auction.Middleware;
 using AutoMapper;
 using BLL;
 using DAL.Data;
 using DAL.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,8 +41,18 @@ namespace Auction
 
             services.AddCors(options =>
                 options.AddPolicy(name: "LocalOriginsPolicy",
-                                  builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader())
+                                  builder => builder
+                                  .WithOrigins("http://localhost:3005")
+                                  .AllowAnyMethod()
+                                  .AllowAnyHeader()
+                                  .AllowCredentials())
             );
+
+            services.AddAntiforgery(options =>
+            {
+                options.HeaderName = "X-XSRF-TOKEN";
+                options.SuppressXFrameOptionsHeader = false;
+            });
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
@@ -49,13 +62,22 @@ namespace Auction
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
+                    ValidateLifetime = false,
                     ValidAudience = Configuration["Jwt:Audience"],
                     ValidIssuer = Configuration["Jwt:Issuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
                 };
             });
 
+            services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                .RequireAuthenticatedUser()
+                .Build();
+            });
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<ITokenManager, TokenManager>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddAutoMapper(c => c.AddProfile<AutomapperProfile>(), typeof(Startup));
             services.AddControllersWithViews()
                     .AddNewtonsoftJson(options =>
@@ -76,6 +98,7 @@ namespace Auction
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
             app.UseStaticFiles();
 
             app.UseHttpsRedirection();

@@ -24,7 +24,6 @@ namespace DAL.Data
 
         public IRoleRepository RoleRepository { get; private set; }
 
-        public IOwnerRepository OwnerRepository { get; private set; }
 
         public UnitOfWork(AuctionDbContext context, ILoggerFactory loggerFactory)
         {
@@ -38,7 +37,6 @@ namespace DAL.Data
             AuctionRepository = new AuctionRepository(context, _logger);
             RoleRepository = new RoleRepository(context, _logger);
             UserRepository = new UserRepository(context, _logger);
-            OwnerRepository = new OwnerRepository(context, _logger);
         }
 
 
