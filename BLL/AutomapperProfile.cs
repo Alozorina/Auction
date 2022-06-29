@@ -9,6 +9,8 @@ namespace BLL
         public AutomapperProfile()
         {
             CreateMap<UserRegistrationModel, User>();
+            CreateMap<UserPersonalInfoModel, User>().ReverseMap();
+            CreateMap<UserCreds, User>();
         }
     }
 }
