@@ -34,7 +34,7 @@ namespace Auction.Controllers
             _tokenManager = tokenManager;
         }
 
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> Get()
         {
@@ -56,6 +56,22 @@ namespace Auction.Controllers
             }
 
             return Ok(user);
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("profile")]
+        public async Task<ActionResult<UserPersonalInfoModel>> GetCurrentUserPersonalInfo()
+        {
+            var currentUser = await GetUser();
+
+            if (currentUser == null)
+            {
+                _logger.Log(LogLevel.Error, "Authorization access error");
+                return NotFound();
+            }
+            var personalInfo = _mapper.Map<UserPersonalInfoModel>(currentUser);
+
+            return Ok(personalInfo);
         }
 
         [AllowAnonymous]
@@ -118,8 +134,27 @@ namespace Auction.Controllers
 
 
         [Authorize(Roles = "Admin, User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPut("edit")]
-        public async Task<ActionResult> UpdatePersonalInfo([FromBody] UserUpdatePersonalInfoModel updateModel)
+        [HttpPut("profile/edit")]
+        public async Task<ActionResult> UpdateCurrentUserPersonalInfo([FromBody] UserPersonalInfoModel updateModel)
+        {
+            var currentUser = await GetUser();
+            try
+            {
+                var update = _mapper.Map(updateModel, currentUser);
+
+                await _unitOfWork.UserRepository.UpdateAsync(update);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return CreatedAtAction(nameof(GetById), new { currentUser.Id }, updateModel);
+        }
+
+        [Authorize(Roles = "Admin, User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPut("profile/creds")]
+        public async Task<ActionResult> UpdateLoginPassword([FromBody] UserCreds updateModel)
         {
             var currentUser = await GetUser();
             try
@@ -128,19 +163,79 @@ namespace Auction.Controllers
                 if (isEmailExists && currentUser.Email != updateModel.Email)
                     return BadRequest("This email is being used by another user");
 
+                var update = _mapper.Map(updateModel, currentUser);
 
-                await _unitOfWork.UserRepository.UpdatePersonalInfoAsync(currentUser.Id, updateModel);
+                await _unitOfWork.UserRepository.UpdateAsync(update);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
             {
                 return BadRequest(ex.Message);
             }
-            return CreatedAtAction(nameof(GetById), new { currentUser.Id }, currentUser);
+            return Ok("Updated successfully");
         }
 
         [Authorize(Roles = "Admin")]
-        [AutoValidateAntiforgeryToken]
+        [HttpPut("edit/{id}")]
+        public async Task<ActionResult> UpdatePersonalInfoById(int id, [FromBody] UserPersonalInfoModel updateModel)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            try
+            {
+                var update = _mapper.Map(updateModel, user);
+
+                await _unitOfWork.UserRepository.UpdateAsync(update);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return CreatedAtAction(nameof(GetById), new { id }, updateModel);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("creds/{id}")]
+        public async Task<ActionResult> UpdateLoginPasswordById(int id, [FromBody] UserCreds updateModel)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            try
+            {
+                var isEmailExists = await _unitOfWork.UserRepository.IsEmailExists(updateModel.Email);
+                if (isEmailExists && user.Email != updateModel.Email)
+                    return BadRequest("This email is being used by another user");
+
+                var update = _mapper.Map(updateModel, user);
+
+                await _unitOfWork.UserRepository.UpdateAsync(update);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok("Updated successfully");
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("creds/{id}")]
+        public async Task<ActionResult> UpdateRoleById(int id, [FromBody] int roleId)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            try
+            {
+                user.RoleId = roleId;
+                await _unitOfWork.UserRepository.UpdateAsync(user);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok("Updated successfully");
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
@@ -154,8 +249,6 @@ namespace Auction.Controllers
 
             return Ok(user);
         }
-
-
 
 
         private async Task<User> GetUser()
