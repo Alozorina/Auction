@@ -18,11 +18,8 @@ namespace DAL.Repositories
             {
                 var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == entity.Id);
 
-                if (existingEntity == null)
-                    dbSet.Add(entity);
-                else
+                if (existingEntity != null)
                 {
-                    existingEntity.AuctionId = entity.Id;
                     existingEntity.CategoryId = entity.CategoryId;
                     existingEntity.Category = entity.Category;
                     existingEntity.Auction = entity.Auction;

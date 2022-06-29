@@ -1,5 +1,4 @@
-﻿using BLL.Models;
-using DAL.Data;
+﻿using DAL.Data;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -71,36 +70,11 @@ namespace DAL.Repositories
             return users.Any(u => u.Email == email);
         }
 
-        public override async Task UpdateAsync(User entity)
+        public override async Task UpdateAsync(User model)
         {
             try
             {
-                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == entity.Id);
-
-                if (existingEntity != null)
-                {
-                    existingEntity.Id = entity.Id;
-                    existingEntity.FirstName = entity.FirstName;
-                    existingEntity.LastName = entity.LastName;
-                    existingEntity.Purchases = entity.Purchases;
-                    existingEntity.Password = entity.Password;
-                    existingEntity.BirthDate = entity.BirthDate;
-                    existingEntity.Email = entity.Email;
-                    existingEntity.RoleId = entity.RoleId;
-                    existingEntity.Role = entity.Role;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{Repo} UpdateAsync function error", typeof(UserRepository));
-            }
-        }
-
-        public async Task UpdatePersonalInfoAsync(int id, UserUpdatePersonalInfoModel model)
-        {
-            try
-            {
-                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == id);
+                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
 
                 if (existingEntity != null)
                 {
@@ -109,11 +83,12 @@ namespace DAL.Repositories
                     existingEntity.Password = model.Password;
                     existingEntity.BirthDate = model.BirthDate;
                     existingEntity.Email = model.Email;
+                    existingEntity.RoleId = model.RoleId;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{Repo} UpdatePersonalInfoAsync function error", typeof(UserRepository));
+                _logger.LogError(ex, "{Repo} UpdateAsync function error", typeof(UserRepository));
             }
         }
 
