@@ -1,11 +1,12 @@
-﻿using DAL.Data;
+﻿using BLL;
+using BLL.Validation;
+using DAL.Data;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -15,6 +16,15 @@ namespace DAL.Repositories
     {
         public UserRepository(AuctionDbContext context, ILogger logger) : base(context, logger)
         {
+        }
+
+        public override async Task AddAsync(User user)
+        {
+            var users = await GetAllAsync();
+            if (UserValidation.IsEmailExists(users, user.Email))
+                throw new AuctionException("This email is being used by another user");
+
+            await dbSet.AddAsync(user);
         }
 
         public async override Task<User> FirstOrDefaultAsync(Expression<Func<User, bool>> predicate)
@@ -64,32 +74,32 @@ namespace DAL.Repositories
             }
         }
 
-        public async Task<bool> IsEmailExists(string email)
-        {
-            var users = await GetAllAsync();
-            return users.Any(u => u.Email == email);
-        }
-
         public override async Task UpdateAsync(User model)
         {
-            try
-            {
-                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
+            var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
 
-                if (existingEntity != null)
-                {
-                    existingEntity.FirstName = model.FirstName;
-                    existingEntity.LastName = model.LastName;
-                    existingEntity.Password = model.Password;
-                    existingEntity.BirthDate = model.BirthDate;
-                    existingEntity.Email = model.Email;
-                    existingEntity.RoleId = model.RoleId;
-                }
-            }
-            catch (Exception ex)
+            if (existingEntity != null)
             {
-                _logger.LogError(ex, "{Repo} UpdateAsync function error", typeof(UserRepository));
+                var users = await GetAllAsync();
+                bool isEmailExists = UserValidation.IsEmailCouldBeUpdated(users, existingEntity.Email, model.Email);
+                bool isPasswordMatches = UserValidation.IsClientPasswordMatches(existingEntity.Password, model.Password);
+                bool isModelHasNullProperty = UserValidation.IsModelHasNullProperty(model);
+                if (isEmailExists || !isPasswordMatches)
+                    throw new AuctionException("Invalid input");
+
+                if (isModelHasNullProperty)
+                    throw new AuctionException("One of the required properties is null");
             }
+            else
+            {
+                throw new AuctionException("Id doesnt't exist");
+            }
+            existingEntity.FirstName = model.FirstName;
+            existingEntity.LastName = model.LastName;
+            existingEntity.Password = model.Password;
+            existingEntity.BirthDate = model.BirthDate;
+            existingEntity.Email = model.Email;
+            existingEntity.RoleId = model.RoleId;
         }
 
         public async Task UpdateRoleId(int userId, int roleId)

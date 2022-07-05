@@ -22,7 +22,7 @@ namespace DAL.Repositories
             _logger = logger;
         }
 
-        public async Task AddAsync(TEntity entity)
+        public virtual async Task AddAsync(TEntity entity)
         {
             try
             {

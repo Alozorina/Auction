@@ -8,7 +8,6 @@ namespace DAL.Interfaces
     {
         Task<IEnumerable<User>> GetAllWithDetailsAsync();
         Task<User> GetByIdWithDetailsAsync(int id);
-        Task<bool> IsEmailExists(string email);
         Task UpdateRoleId(int userId, int roleId);
     }
 }
