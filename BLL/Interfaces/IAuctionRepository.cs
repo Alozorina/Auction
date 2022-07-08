@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 
 namespace DAL.Interfaces
 {
-    public interface IAuctionRepository : IRepository<Auction>
+    public interface IAuctionRepository : IRepository<AuctionEntity>
     {
         Task<bool> AddItemAsync(int auctionId, Item entity);
-        Task<IEnumerable<Auction>> GetAllWithDetailsAsync();
-        Task<Auction> GetByIdWithDetailsAsync(int id);
+        Task<IEnumerable<AuctionEntity>> GetAllWithDetailsAsync();
+        Task<AuctionEntity> GetByIdWithDetailsAsync(int id);
     }
 }
