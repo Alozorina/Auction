@@ -20,7 +20,6 @@ namespace DAL.Repositories
             try
             {
                 return await dbSet
-                                .Include(s => s.Auctions)
                                 .Include(s => s.Items)
                                 .ToListAsync();
             }
@@ -36,7 +35,6 @@ namespace DAL.Repositories
             try
             {
                 return await dbSet
-                                .Include(s => s.Auctions)
                                 .Include(s => s.Items)
                                 .SingleOrDefaultAsync(c => c.Id == id);
             }
@@ -56,7 +54,6 @@ namespace DAL.Repositories
                 if (existingEntity != null)
                 {
                     existingEntity.Name = entity.Name;
-                    existingEntity.Auctions = entity.Auctions;
                     existingEntity.Items = entity.Items;
                 }
             }

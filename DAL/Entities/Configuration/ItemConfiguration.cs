@@ -20,7 +20,6 @@ namespace DAL.Entities.Configuration
                 {
                     Id = 1,
                     Name = "Blue Marble",
-                    AuctionId = 1,
                     CurrentBid = 0,
                     StartingPrice = 50m,
                     StatusId = 1,
@@ -30,7 +29,6 @@ namespace DAL.Entities.Configuration
                  {
                      Id = 2,
                      Name = "Revolution",
-                     AuctionId = 1,
                      CurrentBid = 0,
                      StartingPrice = 60m,
                      StatusId = 1,

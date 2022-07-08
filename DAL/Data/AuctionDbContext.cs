@@ -16,10 +16,8 @@ namespace DAL.Data
         { }
 
         public virtual DbSet<User> Persons { get; set; }
-        public virtual DbSet<AuctionEntity> Auctions { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
         public virtual DbSet<ItemCategory> ItemCategories { get; set; }
-        public virtual DbSet<AuctionCategory> AuctionCategories { get; set; }
         public virtual DbSet<Item> Items { get; set; }
         public virtual DbSet<Status> Statuses { get; set; }
         public virtual DbSet<User> Users { get; set; }
@@ -32,10 +30,8 @@ namespace DAL.Data
             modelBuilder.ApplyConfiguration(new StatusConfiguration());
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
             modelBuilder.ApplyConfiguration(new RoleConfiguration());
-            modelBuilder.ApplyConfiguration(new AuctionConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new ItemConfiguration());
-            modelBuilder.ApplyConfiguration(new AuctionCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new ItemCategoryConfiguration());
         }
     }

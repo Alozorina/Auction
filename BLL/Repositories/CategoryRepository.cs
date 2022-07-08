@@ -23,7 +23,6 @@ namespace DAL.Repositories
                 if (existingEntity != null)
                 {
                     existingEntity.Name = entity.Name;
-                    existingEntity.AuctionCategories = entity.AuctionCategories;
                     existingEntity.ItemCategories = entity.ItemCategories;
                 }
             }

@@ -14,8 +14,6 @@ namespace DAL.Entities
         [Required, DataType(DataType.Currency)]
         public decimal CurrentBid { get; set; }
         [Required]
-        public int AuctionId { get; set; }
-        [Required]
         public int StatusId { get; set; }
         [Required]
         public int OwnerId { get; set; }
@@ -28,7 +26,6 @@ namespace DAL.Entities
         public virtual ICollection<ItemCategory> ItemCategories { get; set; }
         public virtual ItemPhoto ItemPhoto { get; set; }
         [Required]
-        public virtual AuctionEntity Auction { get; set; }
         public virtual Status Status { get; set; }
     }
 }

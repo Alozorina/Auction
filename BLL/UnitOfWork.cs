@@ -10,10 +10,6 @@ namespace DAL.Data
         private readonly AuctionDbContext _context;
         public IItemRepository ItemRepository { get; private set; }
 
-        public IAuctionCategoryRepository AuctionCategoryRepository { get; private set; }
-
-        public IAuctionRepository AuctionRepository { get; private set; }
-
         public ICategoryRepository CategoryRepository { get; private set; }
 
         public IItemCategoryRepository ItemCategoryRepository { get; private set; }
@@ -30,11 +26,9 @@ namespace DAL.Data
             _context = context;
             ILogger _logger = loggerFactory.CreateLogger("logs");
             ItemRepository = new ItemRepository(context, _logger);
-            AuctionCategoryRepository = new AuctionCategoryRepository(context, _logger);
             CategoryRepository = new CategoryRepository(context, _logger);
             ItemCategoryRepository = new ItemCategoryRepository(context, _logger);
             StatusRepository = new StatusRepository(context, _logger);
-            AuctionRepository = new AuctionRepository(context, _logger);
             RoleRepository = new RoleRepository(context, _logger);
             UserRepository = new UserRepository(context, _logger);
         }

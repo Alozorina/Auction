@@ -10,9 +10,6 @@ namespace DAL.Entities.Configuration
 
         public void Configure(EntityTypeBuilder<Status> builder)
         {
-            builder.HasMany(a => a.Auctions)
-                .WithOne(a => a.Status);
-
             builder.HasMany(i => i.Items)
                 .WithOne(item => item.Status);
 

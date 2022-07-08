@@ -6,6 +6,5 @@ namespace DAL.Entities
     {
         public string Name { get; set; }
         public virtual ICollection<ItemCategory> ItemCategories { get; set; }
-        public virtual ICollection<AuctionCategory> AuctionCategories { get; set; }
     }
 }
