@@ -4,9 +4,9 @@ using System;
 
 namespace DAL.Entities.Configuration
 {
-    public class AuctionConfiguration : IEntityTypeConfiguration<Auction>
+    public class AuctionConfiguration : IEntityTypeConfiguration<AuctionEntity>
     {
-        public void Configure(EntityTypeBuilder<Auction> builder)
+        public void Configure(EntityTypeBuilder<AuctionEntity> builder)
         {
             builder.HasMany(i => i.Items)
                 .WithOne(a => a.Auction)
@@ -15,7 +15,7 @@ namespace DAL.Entities.Configuration
 
             builder.HasMany(c => c.AuctionCategories);
             builder.HasData(
-                new Auction
+                new AuctionEntity
                 {
                     Id = 1,
                     Name = "Steve Johnson's Bright Colors",

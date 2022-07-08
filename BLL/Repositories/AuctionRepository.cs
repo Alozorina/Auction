@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repositories
 {
-    public class AuctionRepository : GenericRepository<Auction>, IAuctionRepository
+    public class AuctionRepository : GenericRepository<AuctionEntity>, IAuctionRepository
     {
         public AuctionRepository(AuctionDbContext context, ILogger logger) : base(context, logger) { }
 
@@ -31,7 +31,7 @@ namespace DAL.Repositories
             }
         }
 
-        public async Task<IEnumerable<Auction>> GetAllWithDetailsAsync()
+        public async Task<IEnumerable<AuctionEntity>> GetAllWithDetailsAsync()
         {
             try
             {
@@ -49,7 +49,7 @@ namespace DAL.Repositories
             }
         }
 
-        public async Task<Auction> GetByIdWithDetailsAsync(int id)
+        public async Task<AuctionEntity> GetByIdWithDetailsAsync(int id)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace DAL.Repositories
             }
         }
 
-        public override async Task UpdateAsync(Auction entity)
+        public override async Task UpdateAsync(AuctionEntity entity)
         {
             try
             {

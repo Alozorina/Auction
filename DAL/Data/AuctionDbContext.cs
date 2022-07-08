@@ -16,7 +16,7 @@ namespace DAL.Data
         { }
 
         public virtual DbSet<User> Persons { get; set; }
-        public virtual DbSet<Auction> Auctions { get; set; }
+        public virtual DbSet<AuctionEntity> Auctions { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
         public virtual DbSet<ItemCategory> ItemCategories { get; set; }
         public virtual DbSet<AuctionCategory> AuctionCategories { get; set; }

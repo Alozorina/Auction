@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DAL.Entities
 {
-    public class Auction : Base
+    public class AuctionEntity : Base
     {
         [Required]
         public string Name { get; set; }
