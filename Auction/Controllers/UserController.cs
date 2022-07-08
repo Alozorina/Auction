@@ -3,6 +3,7 @@ using AutoMapper;
 using BLL;
 using BLL.Extensions;
 using BLL.Models;
+using BLL.Validation;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.AspNetCore.Authentication;
@@ -153,12 +154,16 @@ namespace Auction.Controllers
         }
 
         [Authorize(Roles = "Admin, User")]
-        [HttpPut("profile/creds")]
-        public async Task<ActionResult> UpdateLoginPassword([FromBody] UserCreds updateModel)
+        [HttpPut("profile/password")]
+        public async Task<ActionResult> UpdatePassword([FromBody] UserPassword updateModel)
         {
             var currentUser = await GetUser();
             try
             {
+                bool isPasswordMatches = UserValidation.IsClientPasswordMatches(updateModel.OldPassword, currentUser.Password);
+                if (!isPasswordMatches)
+                    throw new AuctionException("Wrong Password");
+
                 var update = _mapper.Map(updateModel, currentUser);
 
                 await _unitOfWork.UserRepository.UpdateAsync(update);
@@ -192,7 +197,7 @@ namespace Auction.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/creds")]
-        public async Task<ActionResult> UpdateLoginPasswordById(int id, [FromBody] UserCreds updateModel)
+        public async Task<ActionResult> UpdateLoginPasswordById(int id, [FromBody] UserPassword updateModel)
         {
             var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
             try

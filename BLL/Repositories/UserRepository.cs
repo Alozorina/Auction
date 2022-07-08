@@ -82,10 +82,9 @@ namespace DAL.Repositories
             {
                 var users = await GetAllAsync();
                 bool isEmailExists = UserValidation.IsEmailCouldBeUpdated(users, existingEntity.Email, model.Email);
-                bool isPasswordMatches = UserValidation.IsClientPasswordMatches(existingEntity.Password, model.Password);
                 bool isModelHasNullProperty = UserValidation.IsModelHasNullProperty(model);
-                if (isEmailExists || !isPasswordMatches)
-                    throw new AuctionException("Invalid input");
+                if (isEmailExists)
+                    throw new AuctionException("Invalid email");
 
                 if (isModelHasNullProperty)
                     throw new AuctionException("One of the required properties is null");
