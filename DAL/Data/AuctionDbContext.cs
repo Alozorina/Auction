@@ -33,6 +33,7 @@ namespace DAL.Data
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new ItemConfiguration());
             modelBuilder.ApplyConfiguration(new ItemCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new ItemPhotoConfiguration());
         }
     }
 }

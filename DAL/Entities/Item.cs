@@ -24,7 +24,7 @@ namespace DAL.Entities
         public virtual User Owner { get; set; }
         public virtual User Buyer { get; set; }
         public virtual ICollection<ItemCategory> ItemCategories { get; set; }
-        public virtual ItemPhoto ItemPhoto { get; set; }
+        public virtual ICollection<ItemPhoto> ItemPhotos { get; set; }
         [Required]
         public virtual Status Status { get; set; }
     }
