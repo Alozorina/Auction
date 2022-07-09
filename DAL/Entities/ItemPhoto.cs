@@ -5,8 +5,6 @@ namespace DAL.Entities
     public class ItemPhoto : Base
     {
         [Required]
-        public string Name { get; set; }
-        [Required]
         public string Path { get; set; }
         [Required]
         public int ItemId { get; set; }

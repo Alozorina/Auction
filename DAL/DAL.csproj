@@ -14,6 +14,8 @@
     <Compile Remove="Migrations\20220624171024_AddSubscribers.Designer.cs" />
     <Compile Remove="Migrations\20220708183859_RemoveAuction_AddPhoto.cs" />
     <Compile Remove="Migrations\20220708183859_RemoveAuction_AddPhoto.Designer.cs" />
+    <Compile Remove="Migrations\20220708223748_UpdateItem.cs" />
+    <Compile Remove="Migrations\20220708223748_UpdateItem.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

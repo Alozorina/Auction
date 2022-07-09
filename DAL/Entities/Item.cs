@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using DAL.CustomValidationAttributes;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace DAL.Entities
@@ -15,10 +17,13 @@ namespace DAL.Entities
         public decimal CurrentBid { get; set; }
         [Required]
         public int StatusId { get; set; }
+        [Required, StartSaleDate, DataType(DataType.Date)]
+        public DateTime StartSaleDate { get; set; }
+        [Required, EndSaleDate, DataType(DataType.Date)]
+        public DateTime EndSaleDate { get; set; }
         [Required]
         public int OwnerId { get; set; }
         public int? BuyerId { get; set; }
-        public int PhotosId { get; set; }
 
         [Required]
         public virtual User Owner { get; set; }

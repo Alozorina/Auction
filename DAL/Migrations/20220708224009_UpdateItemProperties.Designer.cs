@@ -4,14 +4,16 @@ using DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(AuctionDbContext))]
-    partial class AuctionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220708224009_UpdateItemProperties")]
+    partial class UpdateItemProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -141,40 +143,6 @@ namespace DAL.Migrations
                             StartSaleDate = new DateTime(2022, 8, 12, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             StartingPrice = 60m,
                             StatusId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CurrentBid = 0m,
-                            EndSaleDate = new DateTime(2022, 8, 15, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Sunset",
-                            OwnerId = 2,
-                            StartSaleDate = new DateTime(2022, 7, 10, 10, 0, 0, 0, DateTimeKind.Unspecified),
-                            StartingPrice = 30m,
-                            StatusId = 1
-                        },
-                        new
-                        {
-                            Id = 4,
-                            BuyerId = 11,
-                            CurrentBid = 20m,
-                            EndSaleDate = new DateTime(2022, 8, 3, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Spinning Around",
-                            OwnerId = 6,
-                            StartSaleDate = new DateTime(2022, 6, 14, 10, 0, 0, 0, DateTimeKind.Unspecified),
-                            StartingPrice = 5m,
-                            StatusId = 5
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CurrentBid = 0m,
-                            EndSaleDate = new DateTime(2022, 8, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Antarctica Is Changing",
-                            OwnerId = 6,
-                            StartSaleDate = new DateTime(2022, 7, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
-                            StartingPrice = 60m,
-                            StatusId = 4
                         });
                 });
 
@@ -236,6 +204,10 @@ namespace DAL.Migrations
                     b.Property<int>("ItemId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -251,37 +223,15 @@ namespace DAL.Migrations
                         {
                             Id = 1,
                             ItemId = 1,
-                            Path = "steve-johnson-unsplash.jpg"
+                            Name = "steve-johnson-unsplash.jpg",
+                            Path = "/images/"
                         },
                         new
                         {
                             Id = 2,
                             ItemId = 2,
-                            Path = "pexels-steve-johnson-1840624.jpg"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            ItemId = 3,
-                            Path = "pexels-steve-johnson-1174000.jpg"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            ItemId = 4,
-                            Path = "pexels-steve-johnson-1286632.jpg"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            ItemId = 5,
-                            Path = "steve-johnson-RzykwoNjoLw-unsplash.jpg"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            ItemId = 5,
-                            Path = "steve-johnson-RzykwoNjoLw-unsplash-mockup.jpg"
+                            Name = "pexels-steve-johnson-1840624.jpg",
+                            Path = "/images/"
                         });
                 });
 
