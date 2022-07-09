@@ -1,4 +1,6 @@
-﻿using BLL;
+﻿using AutoMapper;
+using BLL;
+using BLL.Models;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -16,23 +18,39 @@ namespace Auction.Controllers
     {
         private readonly ILogger _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public ItemController(ILogger<ItemController> logger, IUnitOfWork unitOfWork)
+        public ItemController(ILogger<ItemController> logger, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        [AllowAnonymous]
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Item>>> Get()
+        public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetPublicSortedByStartDate()
         {
             var items = await _unitOfWork.ItemRepository.GetAllWithDetailsAsync();
-            _logger.Log(LogLevel.Debug, $"Returned {items.ToList().Count} accounts from database.");
+            items = items.OrderBy(i => i.StartSaleDate);
+            List<ItemPublicInfo> publicItems = new List<ItemPublicInfo>();
+            foreach (var item in items)
+            {
+                publicItems.Add(_mapper.Map<ItemPublicInfo>(item));
+            }
+            _logger.Log(LogLevel.Debug, $"Returned {publicItems.Count} items from database.");
+            return Ok(publicItems);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("private")]
+        public async Task<ActionResult<IEnumerable<Item>>> GetAll()
+        {
+            var items = await _unitOfWork.ItemRepository.GetAllWithDetailsAsync();
+            _logger.Log(LogLevel.Debug, $"Returned {items.ToList().Count} items from database.");
             return Ok(items);
         }
 
-        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetById(int id)
         {
@@ -47,7 +65,7 @@ namespace Auction.Controllers
             return Ok(item);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, User")]
         [HttpPost]
         public async Task<ActionResult> Add([FromBody] Item value)
         {

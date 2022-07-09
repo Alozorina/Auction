@@ -18,6 +18,8 @@ namespace BLL
             CreateMap<UserPassword, User>()
                 .ForMember(u => u.Password, opt => opt
                     .MapFrom(up => up.NewPassword));
+
+            CreateMap<Item, ItemPublicInfo>();
         }
     }
 }

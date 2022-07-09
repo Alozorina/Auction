@@ -11,9 +11,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.IO;
 using System.Text;
 
 namespace Auction
@@ -100,7 +102,13 @@ namespace Auction
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseStaticFiles();
+            app.UseFileServer(new FileServerOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(env.ContentRootPath, "StaticFiles")),
+                RequestPath = "/StaticFiles",
+                EnableDirectoryBrowsing = true
+            });
 
             app.UseHttpsRedirection();
 
