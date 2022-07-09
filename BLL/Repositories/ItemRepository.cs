@@ -24,6 +24,7 @@ namespace DAL.Repositories
                             .Include(i => i.Buyer)
                             .Include(i => i.ItemCategories)
                             .Include(i => i.Status)
+                            .Include(i => i.ItemPhotos)
                             .ToListAsync();
             }
             catch (Exception ex)
@@ -42,6 +43,7 @@ namespace DAL.Repositories
                             .Include(i => i.Buyer)
                             .Include(i => i.ItemCategories)
                             .Include(i => i.Status)
+                            .Include(i => i.ItemPhotos)
                             .SingleOrDefaultAsync(c => c.Id == id);
             }
             catch (Exception ex)
@@ -61,11 +63,9 @@ namespace DAL.Repositories
                 {
                     existingEntity.Name = entity.Name;
                     existingEntity.Description = entity.Description;
-                    existingEntity.Status = entity.Status;
                     existingEntity.StatusId = entity.StatusId;
-                    existingEntity.Buyer = entity.Buyer;
-                    existingEntity.Owner = entity.Owner;
                     existingEntity.OwnerId = entity.OwnerId;
+                    existingEntity.BuyerId = entity.BuyerId;
                     existingEntity.CurrentBid = entity.CurrentBid;
                 }
             }
