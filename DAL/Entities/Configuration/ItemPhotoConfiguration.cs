@@ -46,6 +46,18 @@ namespace DAL.Entities.Configuration
                     Id = 6,
                     Path = "steve-johnson-RzykwoNjoLw-unsplash-mockup.jpg",
                     ItemId = 5
+                },
+                new ItemPhoto
+                {
+                    Id = 7,
+                    Path = "pexels-jesse-zheng-732548.jpg",
+                    ItemId = 6
+                },
+                new ItemPhoto
+                {
+                    Id = 8,
+                    Path = "pawel-czerwinski-xubOAAKUwXc-unsplash.jpg",
+                    ItemId = 7
                 }
             );
         }

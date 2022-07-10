@@ -16,6 +16,8 @@
     <Compile Remove="Migrations\20220708183859_RemoveAuction_AddPhoto.Designer.cs" />
     <Compile Remove="Migrations\20220708223748_UpdateItem.cs" />
     <Compile Remove="Migrations\20220708223748_UpdateItem.Designer.cs" />
+    <Compile Remove="Migrations\20220710001604_AddNewItems.cs" />
+    <Compile Remove="Migrations\20220710001604_AddNewItems.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

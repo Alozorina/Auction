@@ -82,6 +82,11 @@ namespace DAL.Migrations
                     b.Property<int?>("BuyerId")
                         .HasColumnType("int");
 
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(80)")
+                        .HasMaxLength(80);
+
                     b.Property<decimal>("CurrentBid")
                         .HasColumnType("decimal(18,2)");
 
@@ -123,41 +128,49 @@ namespace DAL.Migrations
                         new
                         {
                             Id = 1,
+                            CreatedBy = "Steve Johnson",
                             CurrentBid = 0m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
                             EndSaleDate = new DateTime(2022, 8, 15, 22, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Blue Marble",
                             OwnerId = 1,
                             StartSaleDate = new DateTime(2022, 7, 22, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             StartingPrice = 50m,
-                            StatusId = 1
+                            StatusId = 2
                         },
                         new
                         {
                             Id = 2,
+                            CreatedBy = "Steve Johnson",
                             CurrentBid = 0m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
                             EndSaleDate = new DateTime(2022, 8, 15, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Revolution",
                             OwnerId = 2,
                             StartSaleDate = new DateTime(2022, 8, 12, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             StartingPrice = 60m,
-                            StatusId = 1
+                            StatusId = 2
                         },
                         new
                         {
                             Id = 3,
-                            CurrentBid = 0m,
+                            CreatedBy = "Steve Johnson",
+                            CurrentBid = 40m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
                             EndSaleDate = new DateTime(2022, 8, 15, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Sunset",
                             OwnerId = 2,
-                            StartSaleDate = new DateTime(2022, 7, 10, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartSaleDate = new DateTime(2022, 7, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             StartingPrice = 30m,
-                            StatusId = 1
+                            StatusId = 4
                         },
                         new
                         {
                             Id = 4,
                             BuyerId = 11,
+                            CreatedBy = "Steve Johnson",
                             CurrentBid = 20m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
                             EndSaleDate = new DateTime(2022, 8, 3, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Spinning Around",
                             OwnerId = 6,
@@ -168,13 +181,39 @@ namespace DAL.Migrations
                         new
                         {
                             Id = 5,
-                            CurrentBid = 0m,
+                            CreatedBy = "Steve Johnson",
+                            CurrentBid = 70m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
                             EndSaleDate = new DateTime(2022, 8, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Antarctica Is Changing",
                             OwnerId = 6,
                             StartSaleDate = new DateTime(2022, 7, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             StartingPrice = 60m,
                             StatusId = 4
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedBy = "Jesse Zheng",
+                            CurrentBid = 70m,
+                            EndSaleDate = new DateTime(2022, 8, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Green Hills",
+                            OwnerId = 6,
+                            StartSaleDate = new DateTime(2022, 7, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartingPrice = 60m,
+                            StatusId = 4
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedBy = "Pawel Czerwinski",
+                            CurrentBid = 0m,
+                            EndSaleDate = new DateTime(2022, 8, 19, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Black Gold",
+                            OwnerId = 11,
+                            StartSaleDate = new DateTime(2022, 8, 9, 11, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartingPrice = 60m,
+                            StatusId = 2
                         });
                 });
 
@@ -282,6 +321,18 @@ namespace DAL.Migrations
                             Id = 6,
                             ItemId = 5,
                             Path = "steve-johnson-RzykwoNjoLw-unsplash-mockup.jpg"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ItemId = 6,
+                            Path = "pexels-jesse-zheng-732548.jpg"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ItemId = 7,
+                            Path = "pawel-czerwinski-xubOAAKUwXc-unsplash.jpg"
                         });
                 });
 

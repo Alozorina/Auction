@@ -9,6 +9,8 @@ namespace DAL.Entities
     {
         [Required, StringLength(50, MinimumLength = 3)]
         public string Name { get; set; }
+        [Required, StringLength(80, MinimumLength = 5)]
+        public string CreatedBy { get; set; }
         [MaxLength(1000)]
         public string Description { get; set; }
         [Required, DataType(DataType.Currency), Range(double.Epsilon, double.MaxValue, ErrorMessage = "Please enter a value bigger than 0")]
