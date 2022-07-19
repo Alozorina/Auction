@@ -32,16 +32,23 @@ namespace Auction
                     q.UseMicrosoftDependencyInjectionScopedJobFactory();
 
                     // Create a "key" for the job
-                    var jobKey = new JobKey("HelloWorldJob");
+                    var jobKeyClose = new JobKey("UpdateItemCloseStatusJob");
+                    var jobKeyOpen = new JobKey("UpdateItemOpenStatusJob");
 
                     // Register the job with the DI container
-                    q.AddJob<HelloWorldJob>(opts => opts.WithIdentity(jobKey));
+                    q.AddJob<UpdateItemCloseStatusJob>(opts => opts.WithIdentity(jobKeyClose));
+                    q.AddJob<UpdateItemOpenStatusJob>(opts => opts.WithIdentity(jobKeyOpen));
 
                     // Create a trigger for the job
                     q.AddTrigger(opts => opts
-                        .ForJob(jobKey) // link to the HelloWorldJob
-                        .WithIdentity("HelloWorldJob-trigger") // give the trigger a unique name
-                        .WithCronSchedule("0/5 * * * * ?")); // run every 5 seconds
+                        .ForJob(jobKeyClose) // link to the UpdateItemCloseStatusJob
+                        .WithIdentity("UpdateItemCloseStatusJob-trigger") // give the trigger a unique name
+                        .WithCronSchedule("* 0/5 * * * ?")); // run every 5 min
+
+                    q.AddTrigger(opts => opts
+                        .ForJob(jobKeyOpen)
+                        .WithIdentity("UpdateItemOpenStatusJob-trigger")
+                        .WithCronSchedule("* 0/5 * * * ?"));
 
                 });
                 services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
