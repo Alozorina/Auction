@@ -20,6 +20,7 @@ namespace BLL
                     .MapFrom(up => up.NewPassword));
 
             CreateMap<Item, ItemPublicInfo>();
+            CreateMap<Item, ItemUpdateBid>().ReverseMap();
         }
     }
 }
