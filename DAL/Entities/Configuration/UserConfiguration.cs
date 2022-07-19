@@ -31,6 +31,26 @@ namespace DAL.Entities.Configuration
                      Password = "passwordJohn",
                      BirthDate = new DateTime(2000, 2, 2),
                      RoleId = 1,
+                 },
+                 new User
+                 {
+                     Id = 6,
+                     FirstName = "Peter",
+                     LastName = "Choi",
+                     Email = "peter@mail.com",
+                     Password = "password123",
+                     BirthDate = new DateTime(1980, 2, 4),
+                     RoleId = 1,
+                 },
+                 new User
+                 {
+                     Id = 11,
+                     FirstName = "Dana",
+                     LastName = "Meng",
+                     Email = "dana@mail.com",
+                     Password = "password123",
+                     BirthDate = new DateTime(1997, 8, 2),
+                     RoleId = 1,
                  }
              };
             builder.HasData(Users);
