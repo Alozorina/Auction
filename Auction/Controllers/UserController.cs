@@ -75,7 +75,7 @@ namespace Auction.Controllers
                 return NotFound();
             }
 
-            var personalInfo = _mapper.Map<UserPersonalInfoModel>(currentUser);
+            var personalInfo = _mapper.Map<User, UserPersonalInfoModel>(currentUser);
             return Ok(personalInfo);
         }
 

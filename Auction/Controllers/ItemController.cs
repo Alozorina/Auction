@@ -6,6 +6,7 @@ using DAL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -65,6 +66,25 @@ namespace Auction.Controllers
             return Ok(item);
         }
 
+        [HttpPost("search={searchString}")]
+        public async Task<ActionResult<IEnumerable<Item>>> Index(string searchString)
+        {
+            var items = await _unitOfWork.ItemRepository.GetAllWithDetailsAsync();
+            IEnumerable<Item> search;
+            IEnumerable<string> output = null;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                search = items.Where(i =>
+                       i.Name.Contains(searchString)
+                    || i.CreatedBy.Contains(searchString)
+                    || i.ItemCategories.Contains(i.ItemCategories
+                                                    .FirstOrDefault(ic => ic.Category.Name
+                                                            .Contains(searchString)))).ToList();
+                output = search.Select(i => i.Name);
+            }
+            return Ok(output);
+        }
+
         [Authorize(Roles = "Admin, User")]
         [HttpPost]
         public async Task<ActionResult> Add([FromBody] Item value)
@@ -85,8 +105,29 @@ namespace Auction.Controllers
             return BadRequest();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, User")]
         [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateBid(int id, [FromBody] ItemUpdateBid data)
+        {
+            if (data == null)
+                return BadRequest();
+
+            var item = await _unitOfWork.ItemRepository.GetByIdAsync(id);
+            try
+            {
+                var mapped = _mapper.Map(data, item);
+                await _unitOfWork.ItemRepository.UpdateAsync(mapped);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return CreatedAtAction(nameof(GetById), new { item.Id }, item);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/edit")]
         public async Task<ActionResult> Update(int Id, [FromBody] Item value)
         {
             if (Id != value.Id)
