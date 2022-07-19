@@ -14,36 +14,36 @@ namespace DAL.Entities.Configuration
                     Id = 1,
                     Name = "Painting",
                 },
-                    new Category
-                    {
-                        Id = 2,
-                        Name = "Steve Johnson",
-                    },
-                    new Category
-                    {
-                        Id = 3,
-                        Name = "Sculpture",
-                    },
-                    new Category
-                    {
-                        Id = 4,
-                        Name = "Ceramics",
-                    },
-                    new Category
-                    {
-                        Id = 5,
-                        Name = "Chinese Art",
-                    },
-                    new Category
-                    {
-                        Id = 6,
-                        Name = "Porcelain",
-                    },
-                    new Category
-                    {
-                        Id = 7,
-                        Name = "Jewelry",
-                    }
+                new Category
+                {
+                    Id = 2,
+                    Name = "Steve Johnson",
+                },
+                new Category
+                {
+                    Id = 3,
+                    Name = "Sculpture",
+                },
+                new Category
+                {
+                    Id = 4,
+                    Name = "Ceramics",
+                },
+                new Category
+                {
+                    Id = 5,
+                    Name = "Chinese Art",
+                },
+                new Category
+                {
+                    Id = 6,
+                    Name = "Porcelain",
+                },
+                new Category
+                {
+                    Id = 7,
+                    Name = "Jewelry",
+                }
                 );
         }
     }

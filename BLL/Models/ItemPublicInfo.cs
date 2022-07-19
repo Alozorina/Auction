@@ -14,6 +14,9 @@ namespace BLL.Models
         public string Name { get; set; }
         [Required, StringLength(80, MinimumLength = 5)]
         public string CreatedBy { get; set; }
+        [Required]
+        public int OwnerId { get; set; }
+        public int? BuyerId { get; set; }
         [MaxLength(1000)]
         public string Description { get; set; }
         [Required, DataType(DataType.Currency), Range(double.Epsilon, double.MaxValue, ErrorMessage = "Please enter a value bigger than 0")]
