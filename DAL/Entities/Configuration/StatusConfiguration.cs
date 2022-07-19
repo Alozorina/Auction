@@ -23,7 +23,7 @@ namespace DAL.Entities.Configuration
                 new Status
                 {
                     Id = 2,
-                    Name = "Approved",
+                    Name = "Upcoming",
                 },
                 new Status
                 {
