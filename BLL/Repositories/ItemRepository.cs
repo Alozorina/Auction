@@ -23,6 +23,7 @@ namespace DAL.Repositories
                             .Include(i => i.Owner)
                             .Include(i => i.Buyer)
                             .Include(i => i.ItemCategories)
+                                .ThenInclude(ic => ic.Category)
                             .Include(i => i.Status)
                             .Include(i => i.ItemPhotos)
                             .ToListAsync();
@@ -42,6 +43,7 @@ namespace DAL.Repositories
                             .Include(i => i.Owner)
                             .Include(i => i.Buyer)
                             .Include(i => i.ItemCategories)
+                                .ThenInclude(ic => ic.Category)
                             .Include(i => i.Status)
                             .Include(i => i.ItemPhotos)
                             .SingleOrDefaultAsync(c => c.Id == id);
