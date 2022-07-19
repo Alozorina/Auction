@@ -75,12 +75,14 @@ namespace Auction.Controllers
             if (!String.IsNullOrEmpty(searchString))
             {
                 search = items.Where(i =>
-                       i.Name.Contains(searchString)
-                    || i.CreatedBy.Contains(searchString)
+                       i.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
+                    || i.CreatedBy.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
                     || i.ItemCategories.Contains(i.ItemCategories
                                                     .FirstOrDefault(ic => ic.Category.Name
-                                                            .Contains(searchString)))).ToList();
-                output = search.Select(i => i.Name);
+                                                            .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))))
+                    .ToList();
+                if (search != null)
+                    output = search.Select(i => i.Name);
             }
             return Ok(output);
         }
