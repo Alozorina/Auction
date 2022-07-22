@@ -15,6 +15,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Serialization;
 using System.IO;
 using System.Text;
 
@@ -33,8 +34,10 @@ namespace Auction
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddDbContext<AuctionDbContext>(opts =>
-        opts.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<AuctionDbContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            });
 
             services.AddSwaggerGen(c =>
             {
@@ -83,9 +86,11 @@ namespace Auction
             services.AddAutoMapper(c => c.AddProfile<AutomapperProfile>(), typeof(Startup));
             services.AddControllersWithViews()
                     .AddNewtonsoftJson(options =>
-                    options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)
-                    .AddNewtonsoftJson(options =>
-                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+                    {
+                        options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+                        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                        options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                    });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
