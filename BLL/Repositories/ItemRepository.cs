@@ -1,10 +1,12 @@
-﻿using DAL.Data;
+﻿using BLL.Models;
+using DAL.Data;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DAL.Repositories
@@ -13,6 +15,14 @@ namespace DAL.Repositories
     {
         public ItemRepository(AuctionDbContext context, ILogger logger) : base(context, logger)
         {
+        }
+
+        public async Task<List<ItemPublicInfo>> GetAllPublicWithDetailsAsync(AutoMapper.IMapper mapper)
+        {
+            var items = await GetAllWithDetailsAsync();
+            return items.Select(item => mapper.Map<ItemPublicInfo>(item))
+                        .OrderBy(i => i.StartSaleDate)
+                        .ToList();
         }
 
         public async Task<IEnumerable<Item>> GetAllWithDetailsAsync()
