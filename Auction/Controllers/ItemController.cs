@@ -32,15 +32,28 @@ namespace Auction.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetPublicSortedByStartDate()
         {
-            var items = await _unitOfWork.ItemRepository.GetAllWithDetailsAsync();
-            items = items.OrderBy(i => i.StartSaleDate);
-            List<ItemPublicInfo> publicItems = new List<ItemPublicInfo>();
-            foreach (var item in items)
+            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
+            _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
+            return Ok(items);
+        }
+
+        [HttpGet("search={searchString}")]
+        public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> Index(string searchString)
+        {
+            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
+            IEnumerable<ItemPublicInfo> foundBySearchString = new List<ItemPublicInfo>();
+            if (!String.IsNullOrEmpty(searchString))
             {
-                publicItems.Add(_mapper.Map<ItemPublicInfo>(item));
+                foundBySearchString = items.Where(i =>
+                   i.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
+                || i.CreatedBy.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
+                || i.ItemCategoryNames.Contains(i.ItemCategoryNames
+                                                .FirstOrDefault(ic => ic
+                                                    .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))))
+                                            .ToList();
             }
-            _logger.Log(LogLevel.Debug, $"Returned {publicItems.Count} items from database.");
-            return Ok(publicItems);
+            _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
+            return Ok(foundBySearchString);
         }
 
         [Authorize(Roles = "Admin")]
@@ -64,27 +77,6 @@ namespace Auction.Controllers
             }
 
             return Ok(item);
-        }
-
-        [HttpPost("search={searchString}")]
-        public async Task<ActionResult<IEnumerable<Item>>> Index(string searchString)
-        {
-            var items = await _unitOfWork.ItemRepository.GetAllWithDetailsAsync();
-            IEnumerable<Item> search;
-            IEnumerable<string> output = null;
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                search = items.Where(i =>
-                       i.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
-                    || i.CreatedBy.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
-                    || i.ItemCategories.Contains(i.ItemCategories
-                                                    .FirstOrDefault(ic => ic.Category.Name
-                                                            .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))))
-                    .ToList();
-                if (search != null)
-                    output = search.Select(i => i.Name);
-            }
-            return Ok(output);
         }
 
         [Authorize(Roles = "Admin, User")]
