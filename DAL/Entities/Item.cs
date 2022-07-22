@@ -27,12 +27,10 @@ namespace DAL.Entities
         public int OwnerId { get; set; }
         public int? BuyerId { get; set; }
 
-        [Required]
         public virtual User Owner { get; set; }
         public virtual User Buyer { get; set; }
         public virtual ICollection<ItemCategory> ItemCategories { get; set; }
         public virtual ICollection<ItemPhoto> ItemPhotos { get; set; }
-        [Required]
         public virtual Status Status { get; set; }
     }
 }
