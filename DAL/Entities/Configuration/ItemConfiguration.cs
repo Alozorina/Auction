@@ -12,6 +12,8 @@ namespace DAL.Entities.Configuration
                 .WithMany(i => i.Lots)
                 .HasForeignKey(i => i.OwnerId);
 
+            builder.HasMany(i => i.ItemPhotos);
+
             builder.HasOne(p => p.Buyer)
                 .WithMany(i => i.Purchases);
 

@@ -7,9 +7,6 @@ namespace DAL.Entities.Configuration
     {
         public void Configure(EntityTypeBuilder<ItemPhoto> builder)
         {
-            builder.HasOne(ip => ip.Item)
-                .WithMany(i => i.ItemPhotos);
-
             builder.HasData(
                 new ItemPhoto
                 {

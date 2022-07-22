@@ -6,21 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20220624161613_AdjustUserKeyAndPassword.cs" />
-    <Compile Remove="Migrations\20220624161613_AdjustUserKeyAndPassword.Designer.cs" />
-    <Compile Remove="Migrations\20220624163052_AdjustUserKeyAndPassword.cs" />
-    <Compile Remove="Migrations\20220624163052_AdjustUserKeyAndPassword.Designer.cs" />
-    <Compile Remove="Migrations\20220624171024_AddSubscribers.cs" />
-    <Compile Remove="Migrations\20220624171024_AddSubscribers.Designer.cs" />
-    <Compile Remove="Migrations\20220708183859_RemoveAuction_AddPhoto.cs" />
-    <Compile Remove="Migrations\20220708183859_RemoveAuction_AddPhoto.Designer.cs" />
-    <Compile Remove="Migrations\20220708223748_UpdateItem.cs" />
-    <Compile Remove="Migrations\20220708223748_UpdateItem.Designer.cs" />
-    <Compile Remove="Migrations\20220710001604_AddNewItems.cs" />
-    <Compile Remove="Migrations\20220710001604_AddNewItems.Designer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.26">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
