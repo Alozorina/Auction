@@ -27,9 +27,9 @@ namespace BLL.Models
         public DateTime StartSaleDate { get; set; }
         [Required, EndSaleDate, DataType(DataType.Date)]
         public DateTime EndSaleDate { get; set; }
-        public virtual ICollection<ItemCategory> ItemCategories { get; set; }
+        public ICollection<string> ItemCategoryNames { get; set; }
         public virtual ICollection<ItemPhoto> ItemPhotos { get; set; }
         [Required]
-        public virtual Status Status { get; set; }
+        public string Status { get; set; }
     }
 }
