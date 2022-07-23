@@ -4,10 +4,13 @@ using BLL.Models;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,12 +23,14 @@ namespace Auction.Controllers
         private readonly ILogger _logger;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ItemController(ILogger<ItemController> logger, IMapper mapper, IUnitOfWork unitOfWork)
+        public ItemController(ILogger<ItemController> logger, IMapper mapper, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _webHostEnvironment = webHostEnvironment;
         }
 
 
@@ -61,7 +66,6 @@ namespace Auction.Controllers
         public async Task<ActionResult<IEnumerable<Item>>> GetAll()
         {
             var items = await _unitOfWork.ItemRepository.GetAllWithDetailsAsync();
-            _logger.Log(LogLevel.Debug, $"Returned {items.ToList().Count} items from database.");
             return Ok(items);
         }
 
@@ -97,6 +101,32 @@ namespace Auction.Controllers
                 return CreatedAtAction(nameof(GetById), new { value.Id }, value);
             }
             return BadRequest();
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> UploadImages(List<IFormFile> files)
+        {
+            if (files.Count == 0)
+                return BadRequest();
+
+            List<string> imageExtensions = new List<string> { ".JPG", ".JPEG", ".JPE", ".PNG" };
+            string path = Path.Combine(_webHostEnvironment.ContentRootPath, "StaticFiles", "images");
+            string uploadedFileNames = "";
+            foreach (var file in files)
+            {
+                string extension = file.FileName.Substring(file.FileName.LastIndexOf('.'));
+                if (imageExtensions.Contains(extension.ToUpperInvariant()))
+                {
+                    string uniqueFileName = "veilingID" + file.FileName;
+                    uploadedFileNames += uniqueFileName + "; ";
+                    string filePath = Path.Combine(path, uniqueFileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                }
+            }
+            return Ok(new { uploaded = uploadedFileNames });
         }
 
         [Authorize(Roles = "Admin, User")]
