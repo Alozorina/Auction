@@ -20,9 +20,21 @@ namespace DAL.Repositories
         public async Task<List<ItemPublicInfo>> GetAllPublicWithDetailsAsync(AutoMapper.IMapper mapper)
         {
             var items = await GetAllWithDetailsAsync();
-            return items.Select(item => mapper.Map<ItemPublicInfo>(item))
-                        .OrderBy(i => i.StartSaleDate)
-                        .ToList();
+            return items
+                .Select(item =>
+                {
+                    var publicItem = mapper.Map<ItemPublicInfo>(item);
+                    publicItem.ItemCategories = publicItem.ItemCategories.Select(ic =>
+                    {
+                        ic.Item = null;
+                        ic.Category.ItemCategories = null;
+                        return ic;
+                    })
+                    .ToList();
+                    return publicItem;
+                })
+                .OrderBy(i => i.StartSaleDate)
+                .ToList();
         }
 
         public async Task<IEnumerable<Item>> GetAllWithDetailsAsync()
