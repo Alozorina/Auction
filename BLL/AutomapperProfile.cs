@@ -2,7 +2,6 @@
 using BLL.Models;
 using DAL.Entities;
 using System;
-using System.Linq;
 
 namespace BLL
 {
@@ -21,11 +20,10 @@ namespace BLL
                     .MapFrom(up => up.NewPassword));
 
             CreateMap<Item, ItemPublicInfo>()
-                .ForMember(ipi => ipi.ItemCategoryNames, opt => opt
-                    .MapFrom(i => i.ItemCategories
-                        .Select(ic => ic.Category.Name)))
                 .ForMember(ipi => ipi.Status, opt => opt
                     .MapFrom(i => i.Status.Name));
+
+            CreateMap<ItemCreateNewEntity, Item>();
 
             CreateMap<Item, ItemUpdateBid>().ReverseMap();
         }
