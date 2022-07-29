@@ -50,12 +50,11 @@ namespace Auction.Controllers
             if (!String.IsNullOrEmpty(searchString))
             {
                 foundBySearchString = items.Where(i =>
-                   i.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
-                || i.CreatedBy.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
-                || i.ItemCategoryNames.Contains(i.ItemCategoryNames
-                                                .FirstOrDefault(ic => ic
-                                                    .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))))
-                                            .ToList();
+                       i.Name.Contains(searchString)
+                    || i.CreatedBy.Contains(searchString)
+                    || i.ItemCategories.Contains(i.ItemCategories
+                                                    .FirstOrDefault(ic => ic.Category.Name
+                                                            .Contains(searchString)))).ToList();
             }
             _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
             return Ok(foundBySearchString);
@@ -83,42 +82,48 @@ namespace Auction.Controllers
             return Ok(item);
         }
 
-        [Authorize(Roles = "Admin, User")]
+        //[Authorize(Roles = "Admin, User")]
         [HttpPost]
-        public async Task<ActionResult> Add([FromBody] Item value)
+        public async Task<ActionResult> Add([FromForm] ItemCreateNewEntity value)
         {
-            if (ModelState.IsValid)
+            try
             {
-                try
+                List<string> uploadedFileNames = await UploadImages(value.ItemFormFilePhotos);
+                Item item = _mapper.Map<Item>(value);
+                item.StatusId = 1;
+                item.ItemPhotos = new List<ItemPhoto>();
+                foreach (var uploadedFileName in uploadedFileNames)
                 {
-                    await _unitOfWork.ItemRepository.AddAsync(value);
-                    await _unitOfWork.SaveAsync();
+                    var photo = new ItemPhoto()
+                    {
+                        ItemId = item.Id,
+                        Path = uploadedFileName,
+                    };
+                    item.ItemPhotos.Add(photo);
                 }
-                catch (AuctionException ex)
-                {
-                    return BadRequest(ex.Message);
-                }
-                return CreatedAtAction(nameof(GetById), new { value.Id }, value);
+
+                await _unitOfWork.ItemRepository.AddAsync(item);
+                await _unitOfWork.SaveAsync();
+                return CreatedAtAction(nameof(GetById), new { item.Id }, value);
             }
-            return BadRequest();
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpPost("[action]")]
-        public async Task<IActionResult> UploadImages(List<IFormFile> files)
+        async Task<List<string>> UploadImages(List<IFormFile> files)
         {
-            if (files.Count == 0)
-                return BadRequest();
-
             List<string> imageExtensions = new List<string> { ".JPG", ".JPEG", ".JPE", ".PNG" };
             string path = Path.Combine(_webHostEnvironment.ContentRootPath, "StaticFiles", "images");
-            string uploadedFileNames = "";
+            List<string> uploadedFileNames = new List<string>();
             foreach (var file in files)
             {
                 string extension = file.FileName.Substring(file.FileName.LastIndexOf('.'));
                 if (imageExtensions.Contains(extension.ToUpperInvariant()))
                 {
-                    string uniqueFileName = "veilingID" + file.FileName;
-                    uploadedFileNames += uniqueFileName + "; ";
+                    string uniqueFileName = Guid.NewGuid().GetHashCode().ToString() + "_" + file.FileName;
+                    uploadedFileNames.Add(uniqueFileName);
                     string filePath = Path.Combine(path, uniqueFileName);
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -126,7 +131,7 @@ namespace Auction.Controllers
                     }
                 }
             }
-            return Ok(new { uploaded = uploadedFileNames });
+            return uploadedFileNames;
         }
 
         [Authorize(Roles = "Admin, User")]
