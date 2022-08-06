@@ -10,9 +10,9 @@ namespace BLL.Models
 {
     public class ItemCreateNewEntity
     {
-        [Required, StringLength(50, MinimumLength = 3)]
+        [Required, StringLength(80, MinimumLength = 3)]
         public string Name { get; set; }
-        [Required, StringLength(80, MinimumLength = 5)]
+        [Required, StringLength(80, MinimumLength = 3)]
         public string CreatedBy { get; set; }
         [Required]
         public int OwnerId { get; set; }
@@ -24,7 +24,7 @@ namespace BLL.Models
         public DateTime StartSaleDate { get; set; }
         [Required, EndSaleDate, DataType(DataType.Date)]
         public DateTime EndSaleDate { get; set; }
-        public ICollection<ItemCategory> ItemCategoryNames { get; set; }
+        public ICollection<ItemCategory> ItemCategories { get; set; }
         [Required]
         public virtual List<IFormFile> ItemFormFilePhotos { get; set; }
     }
