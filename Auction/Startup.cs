@@ -15,7 +15,6 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json.Serialization;
 using System.IO;
 using System.Text;
 
@@ -37,6 +36,7 @@ namespace Auction
             services.AddDbContext<AuctionDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+                // options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
 
             services.AddSwaggerGen(c =>
@@ -89,7 +89,6 @@ namespace Auction
                     {
                         options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
                         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                        options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                     });
         }
 
