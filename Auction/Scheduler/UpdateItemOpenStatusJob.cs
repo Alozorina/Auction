@@ -21,15 +21,18 @@ namespace Auction.Scheduler
         {
             var items = await _unitOfWork.ItemRepository.FindByPredicateAsync(i => i.StatusId == 2);
 
-            foreach (var item in items)
+            if(items != null)
             {
-                if (item.StartSaleDate < DateTime.Now)
+                foreach (var item in items)
                 {
-                    item.StatusId = 4;
-                    _logger.LogInformation($"Item {item.Name} with ID {item.Id} is Open");
+                    if (item.StartSaleDate < DateTime.Now)
+                    {
+                        item.StatusId = 4;
+                        _logger.LogInformation($"Item {item.Name} with ID {item.Id} is Open");
+                    }
                 }
+                await _unitOfWork.SaveAsync();
             }
-            await _unitOfWork.SaveAsync();
         }
     }
 }

@@ -21,16 +21,18 @@ namespace Auction.Scheduler
         public async Task Execute(IJobExecutionContext context)
         {
             var items = await _unitOfWork.ItemRepository.FindByPredicateAsync(i => i.StatusId == 4);
-
-            foreach (var item in items)
+            if (items != null)
             {
-                if (item.EndSaleDate < DateTime.Now)
+                foreach (var item in items)
                 {
-                    item.StatusId = 5;
-                    _logger.LogInformation($"Item {item.Name} with ID {item.Id} is Closed");
+                    if (item.EndSaleDate < DateTime.Now)
+                    {
+                        item.StatusId = 5;
+                        _logger.LogInformation($"Item {item.Name} with ID {item.Id} is Closed");
+                    }
                 }
+                await _unitOfWork.SaveAsync();
             }
-            await _unitOfWork.SaveAsync();
         }
     }
 }
