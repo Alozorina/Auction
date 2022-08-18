@@ -14,7 +14,9 @@ namespace BLL
             CreateMap<User, UserPersonalInfoModel>()
                 .ForMember(um => um.BirthDate, opt => opt
                     .MapFrom(user => user.BirthDate != null ? ((DateTime)user.BirthDate).ToString("yyyy-MM-dd") : null));
-            CreateMap<User, UserPulicInfo>();
+            CreateMap<User, UserPulicInfo>()
+                .ForMember(upi => upi.Role, opt => opt
+                    .MapFrom(u => u.Role.Name));
             CreateMap<UserPassword, User>()
                 .ForMember(u => u.Password, opt => opt
                     .MapFrom(up => up.NewPassword));

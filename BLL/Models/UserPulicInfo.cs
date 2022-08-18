@@ -16,7 +16,7 @@ namespace BLL.Models
         public string Email { get; set; }
         [DataType(DataType.Date), BirthDate]
         public DateTime? BirthDate { get; set; }
-        public Role Role { get; set; }
+        public string Role { get; set; }
         public virtual ICollection<Item> Purchases { get; set; }
         public virtual ICollection<Item> Lots { get; set; }
     }
