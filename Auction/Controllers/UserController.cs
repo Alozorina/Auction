@@ -39,7 +39,7 @@ namespace Auction.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserPulicInfo>>> Get()
         {
-            var users = await _unitOfWork.UserRepository.GetAllAsync();
+            var users = await _unitOfWork.UserRepository.GetAllWithDetailsAsync();
             List<UserPulicInfo> usersPulicInfo = new List<UserPulicInfo>();
             foreach (var user in users)
             {
@@ -53,7 +53,7 @@ namespace Auction.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetById(int id)
         {
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            var user = await _unitOfWork.UserRepository.GetByIdWithDetailsAsync(id);
 
             if (user == null)
             {
