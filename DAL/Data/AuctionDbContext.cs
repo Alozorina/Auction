@@ -6,12 +6,12 @@ namespace DAL.Data
 {
     public class AuctionDbContext : DbContext
     {
-        public AuctionDbContext() { }
+        /* public AuctionDbContext() { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=AuctionDb;Trusted_Connection=True;");
-        }
+        }*/
         public AuctionDbContext(DbContextOptions<AuctionDbContext> options) : base(options)
         { }
 
