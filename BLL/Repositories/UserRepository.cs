@@ -48,6 +48,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
+                                .Include(u => u.Lots)
                                 .Include(u => u.Role)
                                 .ToListAsync();
             }
@@ -64,6 +65,7 @@ namespace DAL.Repositories
             {
                 return await dbSet
                                 .Include(u => u.Purchases)
+                                .Include(u => u.Lots)
                                 .Include(u => u.Role)
                                 .SingleOrDefaultAsync(c => c.Id == id);
             }
