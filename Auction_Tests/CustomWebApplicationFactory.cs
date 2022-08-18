@@ -1,9 +1,11 @@
 ﻿using Auction;
 using DAL.Data;
+using DAL.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +19,7 @@ namespace Auction_Tests
         {
             builder.ConfigureServices(services =>
             {
-                RemoveLibraryDbContextRegistration(services);
+                RemoveLibraryDbContext(services);
 
                 var serviceProvider = GetInMemoryServiceProvider();
 
@@ -30,7 +32,7 @@ namespace Auction_Tests
                 using (var scope = services.BuildServiceProvider().CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<AuctionDbContext>();
-
+                    var unitOfWork = scope.ServiceProvider.GetService<IUnitOfWork>();
                     UnitTestHelper.SeedData(context);
                 }
             });
@@ -40,10 +42,11 @@ namespace Auction_Tests
         {
             return new ServiceCollection()
                 .AddEntityFrameworkInMemoryDatabase()
+                .AddScoped<IUnitOfWork, UnitOfWork>()
                 .BuildServiceProvider();
         }
 
-        private static void RemoveLibraryDbContextRegistration(IServiceCollection services)
+        private static void RemoveLibraryDbContext(IServiceCollection services)
         {
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType ==
