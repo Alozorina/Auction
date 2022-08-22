@@ -7,6 +7,7 @@ using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -20,6 +21,7 @@ namespace Auction_Tests
     {
         private CustomWebApplicationFactory _factory;
         private HttpClient _client;
+        JsonSerializerSettings _settings;
         private const string RequestUri = "api/user/";
         const string ACCESS_TOKEN_ADMIN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
             "eyJzdWIiOiJKV1RTZXJ2aWNlQWNjZXNzVG9rZW4iLCJqdGkiOiJkN2I5MjMxOS03M2JhL" +
@@ -36,8 +38,12 @@ namespace Auction_Tests
         [SetUp]
         public void Setup()
         {
-            _factory = new CustomWebApplicationFactory();
-            _client = _factory.CreateClient();
+            if (_factory == null || _client == null || _settings == null)
+            {
+                _factory = new CustomWebApplicationFactory();
+                _client = _factory.CreateClient();
+                _settings = UnitTestHelper.GetSerializeSettings();
+            }
         }
 
 
@@ -76,18 +82,7 @@ namespace Auction_Tests
         {
             //arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
-            DefaultContractResolver contractResolver = new DefaultContractResolver
-            {
-                NamingStrategy = new CamelCaseNamingStrategy()
-            };
-            var settings = new JsonSerializerSettings()
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
-                ContractResolver = contractResolver,
-            };
-
-            string expectedJson = JsonConvert.SerializeObject(UnitTestHelper.users[0], settings);
+            string expectedJson = JsonConvert.SerializeObject(UnitTestHelper.users[0], _settings);
 
             // act
             var httpResponse = await _client.GetAsync(RequestUri + "1");
@@ -98,6 +93,22 @@ namespace Auction_Tests
             string responseWithNull = UnitTestHelper.EmptyArrayResponseHandler(responseJson);
 
             responseWithNull.Should().BeEquivalentTo(expectedJson);
+        }
+
+        [Test]
+        public async Task GetCurrentUserPersonalInfo_ReturnsCorrectData()
+        {
+            //arrange
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
+            string expectedJson = JsonConvert.SerializeObject(userPersonalInfo[0], _settings);
+
+            // act
+            var httpResponse = await _client.GetAsync(RequestUri + "profile");
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            responseJson.Should().BeEquivalentTo(expectedJson);
         }
 
         static readonly List<UserPulicInfo> expectedResultOfGetMethod = new List<UserPulicInfo>() {
@@ -116,5 +127,26 @@ namespace Auction_Tests
                 Role = UnitTestHelper.users[1].Role.Name
             }
         };
+
+        static readonly List<UserPersonalInfoModel> userPersonalInfo = new List<UserPersonalInfoModel>() {
+            new UserPersonalInfoModel{
+                FirstName = UnitTestHelper.users[0].FirstName,
+                LastName = UnitTestHelper.users[0].LastName,
+                BirthDate = "1981-01-21",
+                Email = UnitTestHelper.users[0].Email,
+            },
+            new UserPersonalInfoModel{
+                FirstName = UnitTestHelper.users[1].FirstName,
+                LastName = UnitTestHelper.users[1].LastName,
+                BirthDate = "1952-02-22",
+                Email = UnitTestHelper.users[1].Email,
+            }
+        };
+
+        [TearDown]
+        public void TearDown()
+        {
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+        }
     }
 }

@@ -3,6 +3,8 @@ using BLL;
 using DAL.Data;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -150,5 +152,18 @@ namespace Auction_Tests
 
         public static string EmptyArrayResponseHandler(string response) => response.Replace("[]", "null");
 
+        public static JsonSerializerSettings GetSerializeSettings()
+        {
+            DefaultContractResolver contractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy()
+            };
+            return new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                ContractResolver = contractResolver,
+            };
+        }
     }
 }
