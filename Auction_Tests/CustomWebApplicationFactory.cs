@@ -25,14 +25,13 @@ namespace Auction_Tests
 
                 services.AddDbContextPool<AuctionDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase(Guid.Empty.ToString());
+                    options.UseInMemoryDatabase("TestDb");
                     options.UseInternalServiceProvider(serviceProvider);
                 });
 
                 using (var scope = services.BuildServiceProvider().CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<AuctionDbContext>();
-                    var unitOfWork = scope.ServiceProvider.GetService<IUnitOfWork>();
                     UnitTestHelper.SeedData(context);
                 }
             });
@@ -42,7 +41,6 @@ namespace Auction_Tests
         {
             return new ServiceCollection()
                 .AddEntityFrameworkInMemoryDatabase()
-                .AddScoped<IUnitOfWork, UnitOfWork>()
                 .BuildServiceProvider();
         }
 
@@ -51,7 +49,6 @@ namespace Auction_Tests
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType ==
                      typeof(DbContextOptions<AuctionDbContext>));
-
             if (descriptor != null)
             {
                 services.Remove(descriptor);

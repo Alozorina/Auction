@@ -3,6 +3,7 @@ using DAL.Entities;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,6 @@ namespace Auction_Tests
             "wiSWQiOiIxMSIsIkVtYWlsIjoiZGFuYUBtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9p" +
             "ZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJSb2xlIjoiVXNlciIsImlzcyI6IkpXVEF1dGhlbnRpY2F0aW9uU2VydmVyIiwiYX" +
             "VkIjoiSldUU2VydmljZVBvc3RtYW5DbGllbnQifQ.kggkYsfNF0Gvo8TOagFQACk789wTNqIM1LOUbkY8GAY";
-
         [SetUp]
         public void Setup()
         {
@@ -40,11 +40,12 @@ namespace Auction_Tests
             _client = _factory.CreateClient();
         }
 
+
         [Test]
         public async Task Get_ReturnsAllUserPulicInfo_AdminAccess()
         {
             //arrange
-            var expected = ExpectedResultGetMethod;
+            var expected = expectedResultOfGetMethod;
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
 
             // act
@@ -70,7 +71,36 @@ namespace Auction_Tests
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
-        static List<UserPulicInfo> ExpectedResultGetMethod = new List<UserPulicInfo>() {
+        [Test]
+        public async Task GetById_ReturnsUserWithDetails()
+        {
+            //arrange
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
+            DefaultContractResolver contractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy()
+            };
+            var settings = new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                ContractResolver = contractResolver,
+            };
+
+            string expectedJson = JsonConvert.SerializeObject(UnitTestHelper.users[0], settings);
+
+            // act
+            var httpResponse = await _client.GetAsync(RequestUri + "1");
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            string responseWithNull = UnitTestHelper.EmptyArrayResponseHandler(responseJson);
+
+            responseWithNull.Should().BeEquivalentTo(expectedJson);
+        }
+
+        static readonly List<UserPulicInfo> expectedResultOfGetMethod = new List<UserPulicInfo>() {
             new UserPulicInfo{
                 FirstName = UnitTestHelper.users[0].FirstName,
                 LastName = UnitTestHelper.users[0].LastName,
@@ -86,12 +116,5 @@ namespace Auction_Tests
                 Role = UnitTestHelper.users[1].Role.Name
             }
         };
-
-        [TearDown]
-        public void TearDown()
-        {
-            _factory.Dispose();
-            _client.Dispose();
-        }
     }
 }

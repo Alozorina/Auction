@@ -5,6 +5,7 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Auction_Tests
 {
@@ -13,7 +14,7 @@ namespace Auction_Tests
         public static DbContextOptions<AuctionDbContext> GetUnitTestDbOptions()
         {
             var options = new DbContextOptionsBuilder<AuctionDbContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .UseInMemoryDatabase("TestDb")
                 .Options;
 
             using (var context = new AuctionDbContext(options))
@@ -47,21 +48,21 @@ namespace Auction_Tests
             new User
             {
                 Id = 1,
-                FirstName = "Name1",
+                FirstName = "test_Name1",
                 LastName = "Surname1",
-                Email = "user1@mm.com",
+                Email = "test_user1@mm.com",
                 BirthDate = new DateTime(1981, 1, 21),
-                Password = "password1",
+                Password = "test_password1",
                 RoleId = 1
             },
             new User
             {
                 Id = 2,
-                FirstName = "Name2",
+                FirstName = "test_Name2",
                 LastName = "Surname12",
-                Email = "user2@mm.com",
+                Email = "test_user2@mm.com",
                 BirthDate = new DateTime(1992, 2, 22),
-                Password = "password2",
+                Password = "test_password2",
                 RoleId = 2
             }
         };
@@ -97,12 +98,12 @@ namespace Auction_Tests
             new Role
             {
                 Id = 1,
-                Name = "user"
+                Name = "test_user"
             },
             new Role
             {
                 Id = 2,
-                Name = "admin"
+                Name = "test_admin"
             }
         };
         public static List<Status> statuses = new List<Status>()
@@ -110,12 +111,12 @@ namespace Auction_Tests
              new Status
             {
                 Id = 1,
-                Name = "Status1",
+                Name = "test_Status1",
             },
             new Status
             {
                 Id = 2,
-                Name = "Status2",
+                Name = "test_Status2",
             }
         };
         public static List<Category> categories = new List<Category>()
@@ -146,5 +147,8 @@ namespace Auction_Tests
                 ItemId = 2
             }
         };
+
+        public static string EmptyArrayResponseHandler(string response) => response.Replace("[]", "null");
+
     }
 }

@@ -64,8 +64,9 @@ namespace DAL.Repositories
             try
             {
                 return await dbSet
-                                .Include(u => u.Purchases)
-                                .Include(u => u.Lots)
+                                .Include(u => u.Purchases).ThenInclude(l => l.ItemCategories).ThenInclude(ic => ic.Category)
+                                .Include(u => u.Lots).ThenInclude(l => l.ItemCategories).ThenInclude(ic => ic.Category)
+                                .Include(u => u.Lots).ThenInclude(l => l.Status)
                                 .Include(u => u.Role)
                                 .SingleOrDefaultAsync(c => c.Id == id);
             }
