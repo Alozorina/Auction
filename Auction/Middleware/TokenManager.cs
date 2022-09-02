@@ -1,34 +1,33 @@
 ﻿using DAL.Entities;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Auction.Middleware
 {
     public class TokenManager : ITokenManager
     {
         private readonly IConfiguration _configuration;
-        private readonly IDistributedCache _cache;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ConcurrentDictionary<string, bool> _validTokens;
 
         public TokenManager(IConfiguration config,
-                IDistributedCache cache,
                 IHttpContextAccessor httpContextAccessor)
         {
             _configuration = config;
-            _cache = cache;
             _httpContextAccessor = httpContextAccessor;
+            _validTokens = new ConcurrentDictionary<string, bool>();
         }
 
-        public JwtSecurityToken GenerateToken(User user)
+        protected JwtSecurityToken GenerateToken(User user)
         {
             //create claims details based on the user information
             var claims = new[] {
@@ -47,36 +46,42 @@ namespace Auction.Middleware
                 _configuration["Jwt:Issuer"],
                 _configuration["Jwt:Audience"],
                 claims,
+                expires: DateTime.UtcNow.AddMonths(2),
                 signingCredentials: signIn);
 
             return token;
         }
 
-        public async Task<bool> IsCurrentActiveToken()
-        => await IsActiveAsync(GetCurrentTokenAsync());
+        public string GetStringToken(User user)
+        {
+            var token = new JwtSecurityTokenHandler().WriteToken(GenerateToken(user));
+            AddTokenToCache(token);
+            return token;
+        }
 
-        public async Task DeactivateCurrentAsync()
-            => await _cache.SetStringAsync(GetKey(GetCurrentTokenAsync()),
-                " ", new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow =
-                       TimeSpan.FromSeconds(1)
-                });
+        public bool InvalidateToken(string token) => _validTokens.TryRemove(token, out _);
 
-        public async Task<bool> IsActiveAsync(string token)
-            => await _cache.GetStringAsync(GetKey(token)) == null;
+        public bool InvalidateCurrentToken() => InvalidateToken(GetCurrentToken());
 
-        private string GetCurrentTokenAsync()
+        //public bool AddTokenToCache(string token) => _validTokens.TryAdd(token, true);
+        public bool AddTokenToCache(string token) 
+        { 
+            var isOk = _validTokens.TryAdd(token, true);
+            return isOk;
+        }
+
+        public bool IsActive(string token) => _validTokens.ContainsKey(token);
+
+        public bool IsCurrentActive() => IsActive(GetCurrentToken());
+
+        public string GetCurrentToken()
         {
             var authorizationHeader = _httpContextAccessor
                 .HttpContext.Request.Headers["authorization"];
 
             return authorizationHeader == StringValues.Empty
-                ? string.Empty
+                ? null
                 : authorizationHeader.Single().Split(" ").Last();
         }
-
-        private static string GetKey(string token)
-            => $"tokens:{token}:deactivated";
     }
 }
