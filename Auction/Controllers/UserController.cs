@@ -6,14 +6,12 @@ using BLL.Models;
 using BLL.Validation;
 using DAL.Entities;
 using DAL.Interfaces;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 
 namespace Auction.Controllers
@@ -35,6 +33,7 @@ namespace Auction.Controllers
             _tokenManager = tokenManager;
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserPulicInfo>>> Get()
@@ -49,6 +48,7 @@ namespace Auction.Controllers
             return Ok(usersPulicInfo);
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetById(int id)
@@ -64,15 +64,11 @@ namespace Auction.Controllers
             return Ok(user);
         }
 
-        [Authorize(Roles = "Admin, User")]
         [ValidateToken]
+        [Authorize(Roles = "Admin, User")]
         [HttpGet("profile")]
         public async Task<ActionResult<UserPersonalInfoModel>> GetCurrentUserPersonalInfo()
         {
-            /*if (!_tokenManager.IsCurrentActive())
-            {
-                return Unauthorized();
-            }*/
             var currentUser = await GetUser();
             if (currentUser == null)
             {
@@ -88,8 +84,7 @@ namespace Auction.Controllers
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] UserRegistrationModel value)
         {
-            var token = _tokenManager.GetCurrentToken();
-            if (ModelState.IsValid && token == null)
+            if (ModelState.IsValid && !_tokenManager.IsCurrentActive())
             {
                 User user;
                 const int USER_ROLE_ID = 1;
@@ -123,8 +118,7 @@ namespace Auction.Controllers
                 if (userExists == null)
                     return Unauthorized("Invalid credentials");
 
-                var token = _tokenManager.GetStringToken(userExists);
-                return Ok(token);
+                return Ok(_tokenManager.GetStringToken(userExists));
             }
             else
             {
@@ -132,6 +126,7 @@ namespace Auction.Controllers
             }
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin, User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("logout")]
         public IActionResult Logout()
@@ -141,7 +136,7 @@ namespace Auction.Controllers
             return Ok();
         }
 
-
+        [ValidateToken]
         [Authorize(Roles = "Admin, User")]
         [HttpPut("profile/edit")]
         public async Task<ActionResult> UpdateCurrentUserPersonalInfo([FromBody] UserPersonalInfoModel updateModel)
@@ -162,6 +157,7 @@ namespace Auction.Controllers
             return CreatedAtAction(nameof(GetCurrentUserPersonalInfo), updateModel);
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin, User")]
         [HttpPut("profile/password")]
         public async Task<ActionResult> UpdatePassword([FromBody] UserPassword updateModel)
@@ -185,6 +181,7 @@ namespace Auction.Controllers
             return Ok("Updated successfully");
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/edit")]
         public async Task<ActionResult> UpdatePersonalInfoById(int id, [FromBody] UserPersonalInfoModel updateModel)
@@ -204,6 +201,7 @@ namespace Auction.Controllers
             return CreatedAtAction(nameof(GetById), new { id }, updateModel);
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/creds")]
         public async Task<ActionResult> UpdatePasswordById(int id, [FromBody] UserPassword updateModel)
@@ -223,6 +221,7 @@ namespace Auction.Controllers
             return Ok("Updated successfully");
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/role")]
         public async Task<ActionResult> UpdateRoleById(int id, [FromBody] int roleId)
@@ -241,6 +240,7 @@ namespace Auction.Controllers
             return Ok("Updated successfully");
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)

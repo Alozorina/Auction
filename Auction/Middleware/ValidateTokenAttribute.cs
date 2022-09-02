@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Auction.Middleware
 {
-    public class ValidateTokenAttribute : ServiceFilterAttribute
+    public class ValidateTokenAttribute : TypeFilterAttribute
     {
         public ValidateTokenAttribute() : base(typeof(TokenComparer)) { }
     }
@@ -23,10 +23,9 @@ namespace Auction.Middleware
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var isValid = _tokenManager.IsActive(context.HttpContext.Request.Headers["Authorization"]);
-            if (!isValid)
+            if (!_tokenManager.IsCurrentActive())
             {
-                context.Result = new ForbidResult();
+                context.Result = new UnauthorizedResult();
             }
         }
     }

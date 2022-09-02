@@ -174,14 +174,14 @@ namespace Auction_Tests
         public async Task Logout_ReturnsEmptyToken_AndNullUser()
         {
             // act
-            var httpPrivateInfoWithToken = await _client.GetAsync(RequestUri + "profile");
+            var httpPrivateInfo_WithToken = await _client.GetAsync(RequestUri + "profile");
             var stringContent = new StringContent("", Encoding.UTF8, "application/json");
             await _client.PostAsync(RequestUri + "logout", stringContent);
-            var httpPrivatInfoWithoutToken = await _client.GetAsync(RequestUri + "profile");
+            var httpPrivatInfo_WithoutToken = await _client.GetAsync(RequestUri + "profile");
 
             // assert
-            httpPrivateInfoWithToken.EnsureSuccessStatusCode();
-            httpPrivatInfoWithoutToken.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            httpPrivateInfo_WithToken.EnsureSuccessStatusCode();
+            httpPrivatInfo_WithoutToken.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
 

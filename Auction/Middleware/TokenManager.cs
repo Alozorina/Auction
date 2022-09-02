@@ -70,8 +70,8 @@ namespace Auction.Middleware
 
         public bool IsActive(string token)
         {
-            _validTokens.TryGetValue(token, out bool isActive);
-            return isActive;
+            var valid = _validTokens.Get(token);
+            return valid != null;
         }
 
         public bool IsCurrentActive() => IsActive(GetCurrentToken());
