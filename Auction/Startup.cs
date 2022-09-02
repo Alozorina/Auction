@@ -67,7 +67,7 @@ namespace Auction
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidateLifetime = false,
+                    ValidateLifetime = true,
                     ValidAudience = Configuration["Jwt:Audience"],
                     ValidIssuer = Configuration["Jwt:Issuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
@@ -80,6 +80,7 @@ namespace Auction
                 .RequireAuthenticatedUser()
                 .Build();
             });
+
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ITokenManager, TokenManager>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

@@ -45,6 +45,20 @@ namespace Auction_Tests
             context.SaveChanges();
         }
 
+        public static List<Role> roles = new List<Role>()
+        {
+            new Role
+            {
+                Id = 1,
+                Name = "User"
+            },
+            new Role
+            {
+                Id = 2,
+                Name = "Admin"
+            }
+        };
+
         public static List<User> users = new List<User>()
         {
             new User
@@ -55,7 +69,8 @@ namespace Auction_Tests
                 Email = "test_user1@mm.com",
                 BirthDate = new DateTime(1981, 1, 21),
                 Password = "test_password1",
-                RoleId = 1
+                RoleId = 1,
+                Role = roles[0]
             },
             new User
             {
@@ -65,7 +80,8 @@ namespace Auction_Tests
                 Email = "test_user2@mm.com",
                 BirthDate = new DateTime(1992, 2, 22),
                 Password = "test_password2",
-                RoleId = 2
+                RoleId = 2,
+                Role = roles[1],
             }
         };
         public static List<Item> items = new List<Item>()
@@ -95,19 +111,7 @@ namespace Auction_Tests
                 EndSaleDate = new DateTime(2022, 08, 10, 12, 00, 00),
             }
         };
-        public static List<Role> roles = new List<Role>()
-        {
-            new Role
-            {
-                Id = 1,
-                Name = "test_user"
-            },
-            new Role
-            {
-                Id = 2,
-                Name = "test_admin"
-            }
-        };
+
         public static List<Status> statuses = new List<Status>()
         {
              new Status
@@ -152,7 +156,7 @@ namespace Auction_Tests
 
         public static string EmptyArrayResponseHandler(string response) => response.Replace("[]", "null");
 
-        public static JsonSerializerSettings GetSerializeSettings()
+        public static JsonSerializerSettings GetSerializerSettings()
         {
             DefaultContractResolver contractResolver = new DefaultContractResolver
             {

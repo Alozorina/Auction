@@ -21,29 +21,20 @@ namespace Auction_Tests
     {
         private CustomWebApplicationFactory _factory;
         private HttpClient _client;
-        JsonSerializerSettings _settings;
+        JsonSerializerSettings _serializerSettings;
         private const string RequestUri = "api/user/";
-        const string ACCESS_TOKEN_ADMIN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
-            "eyJzdWIiOiJKV1RTZXJ2aWNlQWNjZXNzVG9rZW4iLCJqdGkiOiJkN2I5MjMxOS03M2JhL" +
-            "TQwOTktYWY3NC01ZTYxMTM3ZDUwMWQiLCJpYXQiOiIxOC4wOC4yMDIyIDEwOjU5OjExIi" +
-            "wiSWQiOiIxIiwiRW1haWwiOiJqYW5lbWFpbEBtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWF" +
-            "zLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFk" +
-            "bWluIiwiUm9sZSI6IkFkbWluIiwiaXNzIjoiSldUQXV0aGVudGljYXRpb25TZXJ2ZXIiL" +
-            "CJhdWQiOiJKV1RTZXJ2aWNlUG9zdG1hbkNsaWVudCJ9.0aY13-4iOR-sZ2Wl3AXoIPnWLbDv_Ze0Uubf0m1ZhII";
-        const string ACCESS_TOKEN_USER = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKV1RTZXJ2aWNlQWNjZXNzVG9r" +
-            "ZW4iLCJqdGkiOiI3ZTc4OGFiMS1hZjhkLTRiZDYtOGQwMS02MjY4MGRiMzZhYzkiLCJpYXQiOiIxOC4wOC4yMDIyIDExOjAyOjQzIi" +
-            "wiSWQiOiIxMSIsIkVtYWlsIjoiZGFuYUBtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9p" +
-            "ZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJSb2xlIjoiVXNlciIsImlzcyI6IkpXVEF1dGhlbnRpY2F0aW9uU2VydmVyIiwiYX" +
-            "VkIjoiSldUU2VydmljZVBvc3RtYW5DbGllbnQifQ.kggkYsfNF0Gvo8TOagFQACk789wTNqIM1LOUbkY8GAY";
+
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
-            if (_factory == null || _client == null || _settings == null)
+            if (_factory == null || _client == null || _serializerSettings == null)
             {
                 _factory = new CustomWebApplicationFactory();
                 _client = _factory.CreateClient();
-                _settings = UnitTestHelper.GetSerializeSettings();
+                _serializerSettings = UnitTestHelper.GetSerializerSettings();
             }
+            var token = await GenerateToken();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
 
@@ -52,7 +43,6 @@ namespace Auction_Tests
         {
             //arrange
             var expected = expectedResultOfGetMethod;
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
 
             // act
             var httpResponse = await _client.GetAsync(RequestUri);
@@ -70,6 +60,9 @@ namespace Auction_Tests
         [Test]
         public async Task Get_ReturnsUnauthorized()
         {
+            //arrange
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+
             // act
             var httpResponse = await _client.GetAsync(RequestUri);
 
@@ -81,8 +74,7 @@ namespace Auction_Tests
         public async Task GetById_ReturnsUserWithDetails()
         {
             //arrange
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
-            string expectedJson = JsonConvert.SerializeObject(UnitTestHelper.users[0], _settings);
+            string expectedJson = JsonConvert.SerializeObject(UnitTestHelper.users[0], _serializerSettings);
 
             // act
             var httpResponse = await _client.GetAsync(RequestUri + "1");
@@ -99,8 +91,7 @@ namespace Auction_Tests
         public async Task GetCurrentUserPersonalInfo_ReturnsCorrectData()
         {
             //arrange
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
-            string expectedJson = JsonConvert.SerializeObject(userPersonalInfo[0], _settings);
+            string expectedJson = JsonConvert.SerializeObject(userPersonalInfo[1], _serializerSettings);
 
             // act
             var httpResponse = await _client.GetAsync(RequestUri + "profile");
@@ -111,6 +102,97 @@ namespace Auction_Tests
             responseJson.Should().BeEquivalentTo(expectedJson);
         }
 
+        [Test]
+        public async Task Register_ReturnsNewToken()
+        {
+            //arrange
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            var expectedJson = JsonConvert.SerializeObject(userRegistrationModel[0]);
+
+            // act
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
+            var httpResponse = await _client.PostAsync(RequestUri + "register", stringContent);
+
+            // assert
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            httpResponse.EnsureSuccessStatusCode();
+            responseJson.Should().NotBeNull();
+        }
+
+        [Test]
+        public async Task Register_ReturnsBadRequestIfEmailExists()
+        {
+            //arrange
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            var expectedJson = JsonConvert.SerializeObject(userRegistrationModel[1]);
+
+            // act
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
+            var httpResponse = await _client.PostAsync(RequestUri + "register", stringContent);
+
+            // assert
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            responseJson.Should().BeEquivalentTo("This email is being used by another user");
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Test]
+        public async Task Login_ReturnsNewToken()
+        {
+            //arrange
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            var expectedJson = JsonConvert.SerializeObject(userLoginModel[0]);
+
+            // act
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
+            var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
+
+            // assert
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            httpResponse.EnsureSuccessStatusCode();
+            responseJson.Should().NotBeNull();
+        }
+
+        [Test]
+        public async Task Login_ReturnsUnauthorized()
+        {
+            //arrange
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            var expectedJson = JsonConvert.SerializeObject(userLoginModel[1]);
+
+            // act
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
+            var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
+
+            // assert
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            responseJson.Should().BeEquivalentTo("Invalid credentials");
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        //TODO
+        [Test]
+        public async Task Logout_ReturnsEmptyToken_AndNullUser()
+        {
+            // act
+            var httpPrivatInfoWithToken = await _client.GetAsync(RequestUri + "profile");
+            var stringContent = new StringContent("", Encoding.UTF8, "application/json");
+            var httpResponse = await _client.PostAsync(RequestUri + "logout", stringContent);
+            var token = _client.DefaultRequestHeaders.Authorization;
+            var httpPrivatInfoWithoutToken = await _client.GetAsync(RequestUri + "profile");
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+        }
+
+
+/*        [TearDown]
+        public void TearDown()
+        {
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
+        }*/
+
+        #region TestData
         static readonly List<UserPulicInfo> expectedResultOfGetMethod = new List<UserPulicInfo>() {
             new UserPulicInfo{
                 FirstName = UnitTestHelper.users[0].FirstName,
@@ -138,15 +220,50 @@ namespace Auction_Tests
             new UserPersonalInfoModel{
                 FirstName = UnitTestHelper.users[1].FirstName,
                 LastName = UnitTestHelper.users[1].LastName,
-                BirthDate = "1952-02-22",
+                BirthDate = "1992-02-22",
                 Email = UnitTestHelper.users[1].Email,
             }
         };
 
-        [TearDown]
-        public void TearDown()
+        static readonly List<UserRegistrationModel> userRegistrationModel = new List<UserRegistrationModel>() {
+            new UserRegistrationModel
+            {
+                FirstName = "RegTestName",
+                LastName = "RegTestLastName",
+                Email = "regtestemail@m.com",
+                Password = "regTestPassword"
+            },
+            new UserRegistrationModel
+            {
+                FirstName = UnitTestHelper.users[0].FirstName,
+                LastName = UnitTestHelper.users[0].LastName,
+                Email = UnitTestHelper.users[0].Email,
+                Password = UnitTestHelper.users[0].Password
+            }
+        };
+
+        static readonly List<UserLoginModel> userLoginModel = new List<UserLoginModel>() {
+            new UserLoginModel
+            {
+                Email = UnitTestHelper.users[1].Email,
+                Password = UnitTestHelper.users[1].Password
+            },
+            new UserLoginModel
+            {
+                Email = UnitTestHelper.users[0].Email,
+                Password = "incorrectPassword"
+            }
+        };
+        #endregion
+
+        public async Task<string> GenerateToken()
         {
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            var serializedLoginAdmin = JsonConvert.SerializeObject(userLoginModel[0]);
+
+            var stringContent = new StringContent(serializedLoginAdmin, Encoding.UTF8, "application/json");
+            var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
+
+            return await httpResponse.Content.ReadAsStringAsync();
         }
     }
 }

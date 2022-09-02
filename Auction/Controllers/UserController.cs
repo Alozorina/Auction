@@ -68,6 +68,10 @@ namespace Auction.Controllers
         [HttpGet("profile")]
         public async Task<ActionResult<UserPersonalInfoModel>> GetCurrentUserPersonalInfo()
         {
+            if (!_tokenManager.IsCurrentActive())
+            {
+                return Unauthorized();
+            }
             var currentUser = await GetUser();
             if (currentUser == null)
             {
@@ -83,13 +87,17 @@ namespace Auction.Controllers
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] UserRegistrationModel value)
         {
-            var token = await GetTokenFromContext();
+            var token = _tokenManager.GetCurrentToken();
             if (ModelState.IsValid && token == null)
             {
                 User user;
+                const int USER_ROLE_ID = 1;
+                Role role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == USER_ROLE_ID);
                 try
                 {
                     user = _mapper.Map<User>(value);
+                    user.RoleId = USER_ROLE_ID;
+                    user.Role = role;
                     await _unitOfWork.UserRepository.AddAsync(user);
                     await _unitOfWork.SaveAsync();
                 }
@@ -97,7 +105,7 @@ namespace Auction.Controllers
                 {
                     return BadRequest(ex.Message);
                 }
-                return Ok(new JwtSecurityTokenHandler().WriteToken(_tokenManager.GenerateToken(user)));
+                return Ok(_tokenManager.GetStringToken(user));
             }
             return BadRequest();
         }
@@ -114,9 +122,8 @@ namespace Auction.Controllers
                 if (userExists == null)
                     return Unauthorized("Invalid credentials");
 
-                var token = _tokenManager.GenerateToken(userExists);
-
-                return Ok(new JwtSecurityTokenHandler().WriteToken(token));
+                var token = _tokenManager.GetStringToken(userExists);
+                return Ok(token);
             }
             else
             {
@@ -126,10 +133,11 @@ namespace Auction.Controllers
 
         [Authorize(Roles = "Admin, User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
-            await _tokenManager.DeactivateCurrentAsync();
-            return NoContent();
+            var isSuccess = _tokenManager.InvalidateCurrentToken();
+            HttpContext.User = null;
+            return isSuccess ? Ok("Logout successfull") : Ok("Something went wrong");
         }
 
 
@@ -197,7 +205,7 @@ namespace Auction.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/creds")]
-        public async Task<ActionResult> UpdateLoginPasswordById(int id, [FromBody] UserPassword updateModel)
+        public async Task<ActionResult> UpdatePasswordById(int id, [FromBody] UserPassword updateModel)
         {
             var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
             try
@@ -247,7 +255,6 @@ namespace Auction.Controllers
             return Ok(user);
         }
 
-
         private async Task<User> GetUser()
         {
             return await _unitOfWork.UserRepository
@@ -255,8 +262,5 @@ namespace Auction.Controllers
                     Convert.ToInt32(
                         HttpContext.User.FindFirst("Id").Value));
         }
-
-        async Task<string> GetTokenFromContext() => await HttpContext.GetTokenAsync("access_token");
-
     }
 }
