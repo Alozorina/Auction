@@ -7,8 +7,8 @@ namespace Auction.Middleware
         bool AddTokenToCache(string token);
         string GetCurrentToken();
         string GetStringToken(User user);
-        bool InvalidateCurrentToken();
-        bool InvalidateToken(string token);
+        void InvalidateCurrentToken();
+        void InvalidateToken(string token);
         bool IsActive(string token);
         bool IsCurrentActive();
     }

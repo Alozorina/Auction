@@ -81,6 +81,7 @@ namespace Auction
                 .Build();
             });
 
+            services.AddMemoryCache();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ITokenManager, TokenManager>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

@@ -65,13 +65,14 @@ namespace Auction.Controllers
         }
 
         [Authorize(Roles = "Admin, User")]
+        [ValidateToken]
         [HttpGet("profile")]
         public async Task<ActionResult<UserPersonalInfoModel>> GetCurrentUserPersonalInfo()
         {
-            if (!_tokenManager.IsCurrentActive())
+            /*if (!_tokenManager.IsCurrentActive())
             {
                 return Unauthorized();
-            }
+            }*/
             var currentUser = await GetUser();
             if (currentUser == null)
             {
@@ -135,9 +136,9 @@ namespace Auction.Controllers
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            var isSuccess = _tokenManager.InvalidateCurrentToken();
+            _tokenManager.InvalidateCurrentToken();
             HttpContext.User = null;
-            return isSuccess ? Ok("Logout successfull") : Ok("Something went wrong");
+            return Ok();
         }
 
 

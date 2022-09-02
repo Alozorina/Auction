@@ -1,5 +1,7 @@
 ﻿using DAL.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
@@ -9,7 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
-
+using System.Threading.Tasks;
 
 namespace Auction.Middleware
 {
@@ -17,14 +19,15 @@ namespace Auction.Middleware
     {
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ConcurrentDictionary<string, bool> _validTokens;
+        private readonly IMemoryCache _validTokens;
 
         public TokenManager(IConfiguration config,
-                IHttpContextAccessor httpContextAccessor)
+                IHttpContextAccessor httpContextAccessor,
+                IMemoryCache memoryCache)
         {
             _configuration = config;
             _httpContextAccessor = httpContextAccessor;
-            _validTokens = new ConcurrentDictionary<string, bool>();
+            _validTokens = memoryCache;
         }
 
         protected JwtSecurityToken GenerateToken(User user)
@@ -59,18 +62,17 @@ namespace Auction.Middleware
             return token;
         }
 
-        public bool InvalidateToken(string token) => _validTokens.TryRemove(token, out _);
+        public void InvalidateToken(string token) => _validTokens.Remove(token);
 
-        public bool InvalidateCurrentToken() => InvalidateToken(GetCurrentToken());
+        public void InvalidateCurrentToken() => InvalidateToken(GetCurrentToken());
 
-        //public bool AddTokenToCache(string token) => _validTokens.TryAdd(token, true);
-        public bool AddTokenToCache(string token) 
-        { 
-            var isOk = _validTokens.TryAdd(token, true);
-            return isOk;
+        public bool AddTokenToCache(string token) => _validTokens.Set(token, true);
+
+        public bool IsActive(string token)
+        {
+            _validTokens.TryGetValue(token, out bool isActive);
+            return isActive;
         }
-
-        public bool IsActive(string token) => _validTokens.ContainsKey(token);
 
         public bool IsCurrentActive() => IsActive(GetCurrentToken());
 
