@@ -21,7 +21,7 @@ namespace Auction.Scheduler
         {
             var items = await _unitOfWork.ItemRepository.FindByPredicateAsync(i => i.StatusId == 2);
 
-            if(items != null)
+            if (items != null)
             {
                 foreach (var item in items)
                 {
