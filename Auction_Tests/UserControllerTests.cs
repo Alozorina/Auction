@@ -23,18 +23,19 @@ namespace Auction_Tests
         private HttpClient _client;
         JsonSerializerSettings _serializerSettings;
         private const string RequestUri = "api/user/";
+        private string _token;
 
         [SetUp]
         public async Task Setup()
         {
-            if (_factory == null || _client == null || _serializerSettings == null)
+            if (_serializerSettings == null)
             {
-                _factory = new CustomWebApplicationFactory();
-                _client = _factory.CreateClient();
-                _serializerSettings = UnitTestHelper.GetSerializerSettings();
+                _serializerSettings = TestHelper.GetSerializerSettings();
             }
-            var token = await GenerateToken();
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _factory = new CustomWebApplicationFactory();
+            _client = _factory.CreateClient();
+            _token = await TestHelper.GenerateToken(_client, "admin");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
         }
 
 
@@ -74,7 +75,7 @@ namespace Auction_Tests
         public async Task GetById_ReturnsUserWithDetails()
         {
             //arrange
-            string expectedJson = JsonConvert.SerializeObject(UnitTestHelper.users[0], _serializerSettings);
+            string expectedJson = JsonConvert.SerializeObject(TestHelper.users[0], _serializerSettings);
 
             // act
             var httpResponse = await _client.GetAsync(RequestUri + "1");
@@ -82,7 +83,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            string responseWithNull = UnitTestHelper.EmptyArrayResponseHandler(responseJson);
+            string responseWithNull = TestHelper.EmptyArrayResponseHandler(responseJson);
 
             responseWithNull.Should().BeEquivalentTo(expectedJson);
         }
@@ -108,9 +109,9 @@ namespace Auction_Tests
             //arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userRegistrationModel[0]);
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
             // act
-            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
             var httpResponse = await _client.PostAsync(RequestUri + "register", stringContent);
 
             // assert
@@ -125,9 +126,9 @@ namespace Auction_Tests
             //arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userRegistrationModel[1]);
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
             // act
-            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
             var httpResponse = await _client.PostAsync(RequestUri + "register", stringContent);
 
             // assert
@@ -142,9 +143,9 @@ namespace Auction_Tests
             //arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userLoginModel[0]);
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
             // act
-            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
             var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
 
             // assert
@@ -154,14 +155,14 @@ namespace Auction_Tests
         }
 
         [Test]
-        public async Task Login_ReturnsUnauthorized()
+        public async Task Login_ReturnsUnauthorizedForInvalidCredentials()
         {
             //arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userLoginModel[1]);
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
             // act
-            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
             var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
 
             // assert
@@ -171,56 +172,167 @@ namespace Auction_Tests
         }
 
         [Test]
-        public async Task Logout_ReturnsEmptyToken_AndNullUser()
+        public async Task Logout_InvalidatesAccessToken()
         {
-            // act
+            //arrange
             var httpPrivateInfo_WithToken = await _client.GetAsync(RequestUri + "profile");
             var stringContent = new StringContent("", Encoding.UTF8, "application/json");
+
+            // act
             await _client.PostAsync(RequestUri + "logout", stringContent);
             var httpPrivatInfo_WithoutToken = await _client.GetAsync(RequestUri + "profile");
 
             // assert
             httpPrivateInfo_WithToken.EnsureSuccessStatusCode();
             httpPrivatInfo_WithoutToken.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+            //tear down
+            _token = await TestHelper.GenerateToken(_client, "admin");
         }
 
-
-/*        [TearDown]
-        public void TearDown()
+        [Test]
+        public async Task UpdateCurrentUserPersonalInfo_ReturnsUpdatedUserModel()
         {
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ACCESS_TOKEN_ADMIN);
-        }*/
+            //arrange
+            var expectedJson = JsonConvert.SerializeObject(userPersonalInfo[0], _serializerSettings);
+            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "profile/edit", stringContent);
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            responseJson.Should().BeEquivalentTo(expectedJson);
+        }
+
+        [Test]
+        public async Task UpdatePassword_ThrowsExceptionIfOldPasswordDoesntMatch()
+        {
+            //arrange
+            var incorrectOldPasswordJson = JsonConvert.SerializeObject(userPasswordModel[0]);
+            var stringContent = new StringContent(incorrectOldPasswordJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "profile/password", stringContent);
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Test]
+        public async Task UpdatePassword_ReturnsSuccessCode()
+        {
+            //arrange
+            var correctOldPasswordJson = JsonConvert.SerializeObject(userPasswordModel[1]);
+            var stringContent = new StringContent(correctOldPasswordJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "profile/password", stringContent);
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Test]
+        public async Task UpdatePersonalInfoById_ReturnsForbiddenIfNotAdmin()
+        {
+            //arrange
+            _token = await TestHelper.GenerateToken(_client, "user");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var newUserDataJson = JsonConvert.SerializeObject(userPersonalInfo[1], _serializerSettings);
+            var stringContent = new StringContent(newUserDataJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "1/edit", stringContent);
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Test]
+        public async Task UpdatePersonalInfoById_AvailableToAdmin()
+        {
+            //arrange
+            _token = await TestHelper.GenerateToken(_client, "admin");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var newUserDataJson = JsonConvert.SerializeObject(userPersonalInfo[1], _serializerSettings);
+            var stringContent = new StringContent(newUserDataJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "1/edit", stringContent);
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            responseJson.Should().BeEquivalentTo(newUserDataJson);
+        }
+
+        [Test]
+        public async Task UpdatePasswordById_ReturnsForbiddenIfNotAdmin()
+        {
+            //arrange
+            _token = await TestHelper.GenerateToken(_client, "user");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var newPasswordJson = JsonConvert.SerializeObject(userPasswordModel[1], _serializerSettings);
+            var stringContent = new StringContent(newPasswordJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "1/creds", stringContent);
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Test]
+        public async Task UpdatePasswordById_AvailableToAdmin()
+        {
+            //arrange
+            _token = await TestHelper.GenerateToken(_client, "admin");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var newPasswordJson = JsonConvert.SerializeObject(userPasswordModel[1], _serializerSettings);
+            var stringContent = new StringContent(newPasswordJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "1/creds", stringContent);
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
 
         #region TestData
         static readonly List<UserPulicInfo> expectedResultOfGetMethod = new List<UserPulicInfo>() {
             new UserPulicInfo{
-                FirstName = UnitTestHelper.users[0].FirstName,
-                LastName = UnitTestHelper.users[0].LastName,
-                BirthDate = UnitTestHelper.users[0].BirthDate,
-                Email = UnitTestHelper.users[0].Email,
-                Role = UnitTestHelper.users[0].Role.Name
+                FirstName = TestHelper.users[0].FirstName,
+                LastName = TestHelper.users[0].LastName,
+                BirthDate = TestHelper.users[0].BirthDate,
+                Email = TestHelper.users[0].Email,
+                Role = TestHelper.users[0].Role.Name
             },
             new UserPulicInfo{
-                FirstName = UnitTestHelper.users[1].FirstName,
-                LastName = UnitTestHelper.users[1].LastName,
-                BirthDate = UnitTestHelper.users[1].BirthDate,
-                Email = UnitTestHelper.users[1].Email,
-                Role = UnitTestHelper.users[1].Role.Name
+                FirstName = TestHelper.users[1].FirstName,
+                LastName = TestHelper.users[1].LastName,
+                BirthDate = TestHelper.users[1].BirthDate,
+                Email = TestHelper.users[1].Email,
+                Role = TestHelper.users[1].Role.Name
             }
         };
 
         static readonly List<UserPersonalInfoModel> userPersonalInfo = new List<UserPersonalInfoModel>() {
             new UserPersonalInfoModel{
-                FirstName = UnitTestHelper.users[0].FirstName,
-                LastName = UnitTestHelper.users[0].LastName,
+                FirstName = TestHelper.users[0].FirstName,
+                LastName = TestHelper.users[0].LastName,
                 BirthDate = "1981-01-21",
-                Email = UnitTestHelper.users[0].Email,
+                Email = TestHelper.users[0].Email,
             },
             new UserPersonalInfoModel{
-                FirstName = UnitTestHelper.users[1].FirstName,
-                LastName = UnitTestHelper.users[1].LastName,
+                FirstName = TestHelper.users[1].FirstName,
+                LastName = TestHelper.users[1].LastName,
                 BirthDate = "1992-02-22",
-                Email = UnitTestHelper.users[1].Email,
+                Email = TestHelper.users[1].Email,
             }
         };
 
@@ -234,35 +346,38 @@ namespace Auction_Tests
             },
             new UserRegistrationModel
             {
-                FirstName = UnitTestHelper.users[0].FirstName,
-                LastName = UnitTestHelper.users[0].LastName,
-                Email = UnitTestHelper.users[0].Email,
-                Password = UnitTestHelper.users[0].Password
+                FirstName = TestHelper.users[0].FirstName,
+                LastName = TestHelper.users[0].LastName,
+                Email = TestHelper.users[0].Email,
+                Password = TestHelper.users[0].Password
             }
         };
 
         static readonly List<UserLoginModel> userLoginModel = new List<UserLoginModel>() {
             new UserLoginModel
             {
-                Email = UnitTestHelper.users[1].Email,
-                Password = UnitTestHelper.users[1].Password
+                Email = TestHelper.users[1].Email,
+                Password = TestHelper.users[1].Password
             },
             new UserLoginModel
             {
-                Email = UnitTestHelper.users[0].Email,
+                Email = TestHelper.users[0].Email,
                 Password = "incorrectPassword"
             }
         };
+
+        static readonly List<UserPassword> userPasswordModel = new List<UserPassword>() {
+            new UserPassword
+            {
+                NewPassword = "someNewPassword",
+                OldPassword = "incorrectPassword"
+            },
+            new UserPassword
+            {
+                NewPassword = "someNewPassword",
+                OldPassword = TestHelper.users[1].Password
+            }
+        };
         #endregion
-
-        public async Task<string> GenerateToken()
-        {
-            var serializedLoginAdmin = JsonConvert.SerializeObject(userLoginModel[0]);
-
-            var stringContent = new StringContent(serializedLoginAdmin, Encoding.UTF8, "application/json");
-            var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
-
-            return await httpResponse.Content.ReadAsStringAsync();
-        }
     }
 }
