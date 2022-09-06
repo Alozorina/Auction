@@ -303,6 +303,42 @@ namespace Auction_Tests
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
+        [Test]
+        public async Task UpdateRoleById_AvailableToAdmin()
+        {
+            //arrange
+            const int RoleId = 2;
+            _token = await TestHelper.GenerateToken(_client, "admin");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            var newPasswordJson = JsonConvert.SerializeObject(RoleId);
+            var stringContent = new StringContent(newPasswordJson, Encoding.UTF8, "application/json");
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + "1/role", stringContent);
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Test]
+        public async Task Delete_AvailableToAdmin()
+        {
+            //arrange
+            _token = await TestHelper.GenerateToken(_client, "admin");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            // act
+            var getUser_BeforeDelete = await _client.GetAsync(RequestUri + "1");
+            var httpResponse = await _client.DeleteAsync(RequestUri + "1");
+            var getUser_AfterDelete = await _client.GetAsync(RequestUri + "1");
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            getUser_BeforeDelete.EnsureSuccessStatusCode();
+            getUser_AfterDelete.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
         #region TestData
         static readonly List<UserPulicInfo> expectedResultOfGetMethod = new List<UserPulicInfo>() {
             new UserPulicInfo{
