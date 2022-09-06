@@ -80,7 +80,6 @@ namespace DAL.Repositories
         public override async Task UpdateAsync(User model)
         {
             var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
-
             if (existingEntity != null)
             {
                 var users = await GetAllAsync();
@@ -104,15 +103,16 @@ namespace DAL.Repositories
             existingEntity.RoleId = model.RoleId;
         }
 
-        public async Task UpdateRoleId(int userId, int roleId)
+        public async Task UpdateRole(User model)
         {
             try
             {
-                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == userId);
+                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
 
                 if (existingEntity != null)
                 {
-                    existingEntity.RoleId = roleId;
+                    existingEntity.RoleId = model.RoleId;
+                    existingEntity.Role = model.Role;
                 }
             }
             catch (Exception ex)

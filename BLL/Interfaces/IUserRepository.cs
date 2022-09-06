@@ -8,6 +8,6 @@ namespace DAL.Interfaces
     {
         Task<IEnumerable<User>> GetAllWithDetailsAsync();
         Task<User> GetByIdWithDetailsAsync(int id);
-        Task UpdateRoleId(int userId, int roleId);
+        Task UpdateRole(User model);
     }
 }

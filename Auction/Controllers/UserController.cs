@@ -58,7 +58,7 @@ namespace Auction.Controllers
             if (user == null)
             {
                 _logger.Log(LogLevel.Error, $"Account with id: {id}, hasn't been found in db.");
-                return Unauthorized();
+                return BadRequest($"Account with id: {id}, hasn't been found in db.");
             }
 
             return Ok(user);
@@ -73,7 +73,7 @@ namespace Auction.Controllers
             if (currentUser == null)
             {
                 _logger.Log(LogLevel.Error, "Authorization access error");
-                return NotFound();
+                return NotFound("Authorization access error");
             }
 
             var personalInfo = _mapper.Map<User, UserPersonalInfoModel>(currentUser);
@@ -227,10 +227,13 @@ namespace Auction.Controllers
         public async Task<ActionResult> UpdateRoleById(int id, [FromBody] int roleId)
         {
             var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+
             try
             {
+                Role role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == roleId);
                 user.RoleId = roleId;
-                await _unitOfWork.UserRepository.UpdateAsync(user);
+                user.Role = role;
+                await _unitOfWork.UserRepository.UpdateRole(user);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
