@@ -52,12 +52,6 @@ namespace Auction
                                   .AllowCredentials())
             );
 
-            services.AddAntiforgery(options =>
-            {
-                options.HeaderName = "X-XSRF-TOKEN";
-                options.SuppressXFrameOptionsHeader = false;
-            });
-
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.RequireHttpsMetadata = false;
