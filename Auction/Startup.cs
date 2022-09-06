@@ -36,7 +36,6 @@ namespace Auction
             services.AddDbContext<AuctionDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
-                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
 
             services.AddSwaggerGen(c =>
@@ -82,7 +81,7 @@ namespace Auction
             });
 
             services.AddMemoryCache();
-            services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ITokenManager, TokenManager>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddAutoMapper(c => c.AddProfile<AutomapperProfile>(), typeof(Startup));
