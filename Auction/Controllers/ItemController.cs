@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Auction.Middleware;
+using AutoMapper;
 using BLL;
 using BLL.Models;
 using DAL.Entities;
@@ -42,24 +43,45 @@ namespace Auction.Controllers
             return Ok(items);
         }
 
-        [HttpGet("search={searchString}")]
-        public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> Index(string searchString)
+        [HttpGet("lots/user={id}")]
+        public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetLotsByUserId(int id)
         {
             var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
-            IEnumerable<ItemPublicInfo> foundBySearchString = new List<ItemPublicInfo>();
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                foundBySearchString = items.Where(i =>
-                       i.Name.Contains(searchString)
-                    || i.CreatedBy.Contains(searchString)
-                    || i.ItemCategories.Contains(i.ItemCategories
-                                                    .FirstOrDefault(ic => ic.Category.Name
-                                                            .Contains(searchString)))).ToList();
-            }
-            _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
-            return Ok(foundBySearchString);
+            var lots = items.Where(i => i.OwnerId == id).OrderByDescending(i => i.StartSaleDate).ToList();
+            _logger.Log(LogLevel.Debug, $"Returned {lots.Count} lots from database.");
+            return Ok(lots);
         }
 
+        [HttpGet("purchases/user={id}")]
+        public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetPurchasesByUserId(int id)
+        {
+            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
+            var purchases = items.Where(i => i.BuyerId == id).OrderByDescending(i => i.StartSaleDate).ToList();
+            _logger.Log(LogLevel.Debug, $"Returned {purchases.Count} purchases from database.");
+            return Ok(purchases);
+        }
+
+        [HttpGet("search={searchParams}")]
+        public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> Search(string searchParams)
+        {
+            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
+            IEnumerable<ItemPublicInfo> foundBySearchParams = new List<ItemPublicInfo>();
+            if (!String.IsNullOrEmpty(searchParams))
+            {
+                foundBySearchParams = items
+                    .Where(i =>
+                       i.Name.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
+                    || i.CreatedBy.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
+                    || i.ItemCategories.Contains(i.ItemCategories
+                                                    .FirstOrDefault(ic => ic.Category.Name
+                                                            .Contains(searchParams, StringComparison.CurrentCultureIgnoreCase))))
+                    .ToList();
+            }
+            _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
+            return Ok(foundBySearchParams);
+        }
+
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpGet("private")]
         public async Task<ActionResult<IEnumerable<Item>>> GetAll()
@@ -68,6 +90,8 @@ namespace Auction.Controllers
             return Ok(items);
         }
 
+        [ValidateToken]
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetById(int id)
         {
@@ -82,7 +106,8 @@ namespace Auction.Controllers
             return Ok(item);
         }
 
-        //[Authorize(Roles = "Admin, User")]
+        [ValidateToken]
+        [Authorize(Roles = "Admin, User")]
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] ItemCreateNewEntity value)
         {
@@ -104,7 +129,7 @@ namespace Auction.Controllers
 
                 await _unitOfWork.ItemRepository.AddAsync(item);
                 await _unitOfWork.SaveAsync();
-                return CreatedAtAction(nameof(GetById), new { item.Id }, value);
+                return CreatedAtAction(nameof(GetById), new { id = item.Id }, item);
             }
             catch (AuctionException ex)
             {
@@ -134,6 +159,7 @@ namespace Auction.Controllers
             return uploadedFileNames;
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin, User")]
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateBid(int id, [FromBody] ItemUpdateBid data)
@@ -155,6 +181,7 @@ namespace Auction.Controllers
             return CreatedAtAction(nameof(GetById), new { item.Id }, item);
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/edit")]
         public async Task<ActionResult> Update(int Id, [FromBody] Item value)
@@ -173,6 +200,7 @@ namespace Auction.Controllers
             return CreatedAtAction(nameof(GetById), new { value.Id }, value);
         }
 
+        [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
