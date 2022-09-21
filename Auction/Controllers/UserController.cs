@@ -112,8 +112,7 @@ namespace Auction.Controllers
         {
             if (_userLoginData != null && _userLoginData.Email != null && _userLoginData.Password != null)
             {
-                var userExists = await _unitOfWork.UserRepository
-                    .FirstOrDefaultAsync(u => u.Email == _userLoginData.Email && u.Password == _userLoginData.Password);
+                var userExists = await _unitOfWork.UserRepository.Login(_userLoginData.Email, _userLoginData.Password);
 
                 if (userExists == null)
                     return Unauthorized("Invalid credentials");
@@ -171,7 +170,7 @@ namespace Auction.Controllers
 
                 var update = _mapper.Map(updateModel, currentUser);
 
-                await _unitOfWork.UserRepository.UpdateAsync(update);
+                await _unitOfWork.UserRepository.UpdatePassword(update);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
@@ -210,7 +209,7 @@ namespace Auction.Controllers
             try
             {
                 var update = _mapper.Map(updateModel, user);
-                await _unitOfWork.UserRepository.UpdateAsync(update);
+                await _unitOfWork.UserRepository.UpdatePassword(update);
                 await _unitOfWork.SaveAsync();
 
             }

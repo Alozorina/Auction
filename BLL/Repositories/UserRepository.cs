@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using HashHandler = BCrypt.Net.BCrypt;
 
 namespace DAL.Repositories
 {
@@ -24,6 +25,7 @@ namespace DAL.Repositories
             if (UserValidation.IsEmailExists(users, user.Email))
                 throw new AuctionException("This email is being used by another user");
 
+            user.Password = HashHandler.HashPassword(user.Password);
             await dbSet.AddAsync(user);
         }
 
@@ -41,6 +43,9 @@ namespace DAL.Repositories
                 return null;
             }
         }
+
+        public async Task<User> Login(string email, string password) 
+            => await dbSet.FirstOrDefaultAsync(u => u.Email == email && u.Password == HashHandler.HashPassword(password));
 
         public async Task<IEnumerable<User>> GetAllWithDetailsAsync()
         {
@@ -97,10 +102,27 @@ namespace DAL.Repositories
             }
             existingEntity.FirstName = model.FirstName;
             existingEntity.LastName = model.LastName;
-            existingEntity.Password = model.Password;
+            existingEntity.Password = HashHandler.HashPassword(model.Password);
             existingEntity.BirthDate = model.BirthDate;
             existingEntity.Email = model.Email;
             existingEntity.RoleId = model.RoleId;
+        }
+
+        public async Task UpdatePassword(User model)
+        {
+            try
+            {
+                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
+
+                if (existingEntity != null)
+                {
+                    existingEntity.Password = HashHandler.HashPassword(model.Password);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} UpdatePassword function error", typeof(UserRepository));
+            }
         }
 
         public async Task UpdateRole(User model)

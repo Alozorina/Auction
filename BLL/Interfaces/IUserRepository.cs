@@ -9,5 +9,7 @@ namespace DAL.Interfaces
         Task<IEnumerable<User>> GetAllWithDetailsAsync();
         Task<User> GetByIdWithDetailsAsync(int id);
         Task UpdateRole(User model);
+        Task UpdatePassword(User model);
+        Task<User> Login(string email, string password);
     }
 }
