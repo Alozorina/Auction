@@ -8,7 +8,7 @@ namespace DAL.Entities
     public class User : Person
     {
         [Required(ErrorMessage = "Password is required")]
-        [DataType(DataType.Password), StringLength(32, MinimumLength = 6)]
+        [DataType(DataType.Password)]
         public string Password { get; set; }
         [Required]
         public int RoleId { get; set; }
