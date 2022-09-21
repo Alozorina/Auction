@@ -28,8 +28,8 @@ namespace DAL.Entities.Configuration
                     StartingPrice = 50m,
                     StatusId = 2,
                     OwnerId = 1,
-                    StartSaleDate = new DateTime(2022, 07, 22, 12, 00, 00),
-                    EndSaleDate = new DateTime(2022, 08, 15, 22, 00, 00),
+                    StartSaleDate = new DateTime(2023, 05, 22, 12, 00, 00),
+                    EndSaleDate = new DateTime(2023, 08, 15, 22, 00, 00),
                     Description = "Following the success of the inaugural edition in March 2021, " +
                     "consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors" +
                     " auction this July. Running the gamut of the avant-garde from the late 19th century through " +
@@ -45,8 +45,8 @@ namespace DAL.Entities.Configuration
                      StartingPrice = 60m,
                      StatusId = 2,
                      OwnerId = 2,
-                     StartSaleDate = new DateTime(2022, 08, 12, 10, 00, 00),
-                     EndSaleDate = new DateTime(2022, 08, 15, 12, 00, 00),
+                     StartSaleDate = new DateTime(2022, 12, 12, 10, 00, 00),
+                     EndSaleDate = new DateTime(2023, 08, 15, 12, 00, 00),
                      Description = "Following the success of the inaugural edition in March 2021, " +
                     "consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors" +
                     " auction this July. Running the gamut of the avant-garde from the late 19th century through " +
@@ -62,8 +62,8 @@ namespace DAL.Entities.Configuration
                      StartingPrice = 30m,
                      StatusId = 4,
                      OwnerId = 2,
-                     StartSaleDate = new DateTime(2022, 07, 09, 10, 00, 00),
-                     EndSaleDate = new DateTime(2022, 08, 15, 12, 00, 00),
+                     StartSaleDate = new DateTime(2023, 03, 09, 10, 00, 00),
+                     EndSaleDate = new DateTime(2023, 08, 15, 12, 00, 00),
                      Description = "Following the success of the inaugural edition in March 2021, " +
                     "consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors" +
                     " auction this July. Running the gamut of the avant-garde from the late 19th century through " +
@@ -98,7 +98,7 @@ namespace DAL.Entities.Configuration
                      StatusId = 4,
                      OwnerId = 6,
                      StartSaleDate = new DateTime(2022, 07, 09, 10, 00, 00),
-                     EndSaleDate = new DateTime(2022, 08, 10, 12, 00, 00),
+                     EndSaleDate = new DateTime(2023, 08, 10, 12, 00, 00),
                      Description = "Following the success of the inaugural edition in March 2021, " +
                     "consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors" +
                     " auction this July. Running the gamut of the avant-garde from the late 19th century through " +
@@ -115,7 +115,7 @@ namespace DAL.Entities.Configuration
                      StatusId = 4,
                      OwnerId = 6,
                      StartSaleDate = new DateTime(2022, 07, 09, 10, 00, 00),
-                     EndSaleDate = new DateTime(2022, 08, 10, 12, 00, 00),
+                     EndSaleDate = new DateTime(2023, 08, 10, 12, 00, 00),
                  },
                  new Item
                  {
@@ -127,7 +127,7 @@ namespace DAL.Entities.Configuration
                      StatusId = 2,
                      OwnerId = 11,
                      StartSaleDate = new DateTime(2022, 08, 09, 11, 00, 00),
-                     EndSaleDate = new DateTime(2022, 08, 19, 12, 00, 00),
+                     EndSaleDate = new DateTime(2023, 08, 19, 12, 00, 00),
                  }
                 );
         }
