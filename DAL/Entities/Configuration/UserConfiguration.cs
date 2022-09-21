@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
+using HashHandler = BCrypt.Net.BCrypt;
 
 namespace DAL.Entities.Configuration
 {
@@ -18,7 +19,7 @@ namespace DAL.Entities.Configuration
                      FirstName = "Jane",
                      LastName = "Doe",
                      Email = "janemail@mail.com",
-                     Password = "passwordJane",
+                     Password = HashHandler.HashPassword("passwordJane"),
                      BirthDate = new DateTime(2000, 12, 12),
                      RoleId = 2
                  },
@@ -28,7 +29,7 @@ namespace DAL.Entities.Configuration
                      FirstName = "John",
                      LastName = "Doe",
                      Email = "johnmail@mail.com",
-                     Password = "passwordJohn",
+                     Password = HashHandler.HashPassword("passwordJohn"),
                      BirthDate = new DateTime(2000, 2, 2),
                      RoleId = 1,
                  },
@@ -38,7 +39,7 @@ namespace DAL.Entities.Configuration
                      FirstName = "Peter",
                      LastName = "Choi",
                      Email = "peter@mail.com",
-                     Password = "password123",
+                     Password = HashHandler.HashPassword("password123"),
                      BirthDate = new DateTime(1980, 2, 4),
                      RoleId = 1,
                  },
@@ -48,7 +49,7 @@ namespace DAL.Entities.Configuration
                      FirstName = "Dana",
                      LastName = "Meng",
                      Email = "dana@mail.com",
-                     Password = "password123",
+                     Password = HashHandler.HashPassword("password123"),
                      BirthDate = new DateTime(1997, 8, 2),
                      RoleId = 1,
                  }
