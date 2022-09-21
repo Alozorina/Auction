@@ -1,7 +1,7 @@
 ﻿using DAL.Entities;
 using System.Collections.Generic;
 using System.Linq;
-using BC = BCrypt.Net.BCrypt;
+using HashHandler = BCrypt.Net.BCrypt;
 
 namespace BLL.Validation
 {
@@ -13,8 +13,8 @@ namespace BLL.Validation
         public static bool IsEmailCouldBeUpdated(IEnumerable<User> users, string userEmail, string updateModelEmail)
             => userEmail != updateModelEmail && IsEmailExists(users, updateModelEmail);
 
-        public static bool IsClientPasswordMatches(string textPasswordFromClient, string currentHashPasswordInDb)
-            => BC.Verify(textPasswordFromClient, currentHashPasswordInDb);
+        public static bool IsClientPasswordValid(string textPasswordFromClient, string currentHashPasswordInDb)
+            => HashHandler.Verify(textPasswordFromClient, currentHashPasswordInDb);
 
         public static bool IsModelHasNullProperty(User model)
             => model == null

@@ -164,8 +164,8 @@ namespace Auction.Controllers
             var currentUser = await GetUser();
             try
             {
-                bool isPasswordMatches = UserValidation.IsClientPasswordMatches(updateModel.OldPassword, currentUser.Password);
-                if (!isPasswordMatches)
+                bool isPasswordOk = UserValidation.IsClientPasswordValid(updateModel.OldPassword, currentUser.Password);
+                if (!isPasswordOk)
                     throw new AuctionException("Wrong Password");
 
                 var update = _mapper.Map(updateModel, currentUser);
