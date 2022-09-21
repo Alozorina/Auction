@@ -44,8 +44,12 @@ namespace DAL.Repositories
             }
         }
 
-        public async Task<User> Login(string email, string password) 
-            => await dbSet.FirstOrDefaultAsync(u => u.Email == email && u.Password == HashHandler.HashPassword(password));
+        public async Task<User> Login(string email, string password)
+        {
+            var user = await this.FirstOrDefaultAsync(u => u.Email == email);
+            bool isPasswordCorrect = HashHandler.Verify(password, user.Password);
+            return isPasswordCorrect? user : null;
+        }
 
         public async Task<IEnumerable<User>> GetAllWithDetailsAsync()
         {
