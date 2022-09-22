@@ -12,6 +12,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using HashHandler = BCrypt.Net.BCrypt;
+
 
 namespace Auction_Tests
 {
@@ -72,7 +74,7 @@ namespace Auction_Tests
                 LastName = "Surname1",
                 Email = "test_user1@mm.com",
                 BirthDate = new DateTime(1981, 1, 21),
-                Password = "test_password1",
+                Password = HashHandler.HashPassword("test_password1"),
                 RoleId = 1,
                 Role = roles[0]
             },
@@ -83,7 +85,7 @@ namespace Auction_Tests
                 LastName = "Surname12",
                 Email = "test_user2@mm.com",
                 BirthDate = new DateTime(1992, 2, 22),
-                Password = "test_password2",
+                Password = HashHandler.HashPassword("test_password2"),
                 RoleId = 2,
                 Role = roles[1],
             }
@@ -180,12 +182,12 @@ namespace Auction_Tests
                 ? new UserLoginModel
                 {
                     Email = users[1].Email,
-                    Password = users[1].Password
+                    Password = "test_password2"
                 }
                 : new UserLoginModel
                 {
                     Email = users[0].Email,
-                    Password = users[0].Password
+                    Password = "test_password1"
                 };
 
             var serializedLoginAdmin = JsonConvert.SerializeObject(loginModel);

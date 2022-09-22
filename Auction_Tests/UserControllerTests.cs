@@ -385,7 +385,7 @@ namespace Auction_Tests
                 FirstName = TestHelper.users[0].FirstName,
                 LastName = TestHelper.users[0].LastName,
                 Email = TestHelper.users[0].Email,
-                Password = TestHelper.users[0].Password
+                Password = "test_password1"
             }
         };
 
@@ -393,7 +393,7 @@ namespace Auction_Tests
             new UserLoginModel
             {
                 Email = TestHelper.users[1].Email,
-                Password = TestHelper.users[1].Password
+                Password = "test_password2"
             },
             new UserLoginModel
             {
@@ -411,7 +411,7 @@ namespace Auction_Tests
             new UserPassword
             {
                 NewPassword = "someNewPassword",
-                OldPassword = TestHelper.users[1].Password
+                OldPassword = "test_password2"
             }
         };
         #endregion
