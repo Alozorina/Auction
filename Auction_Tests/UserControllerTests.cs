@@ -75,17 +75,21 @@ namespace Auction_Tests
         public async Task GetById_ReturnsUserWithDetails()
         {
             //arrange
-            string expectedJson = JsonConvert.SerializeObject(TestHelper.users[0], _serializerSettings);
+            var expected = TestHelper.users[0];
 
             // act
             var httpResponse = await _client.GetAsync(RequestUri + "1");
 
             // assert
             httpResponse.EnsureSuccessStatusCode();
-            string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            string responseWithNull = TestHelper.EmptyArrayResponseHandler(responseJson);
+            var stringResponse = await httpResponse.Content.ReadAsStringAsync();
+            var actualUser = JsonConvert.DeserializeObject<User>(stringResponse);
 
-            responseWithNull.Should().BeEquivalentTo(expectedJson);
+            actualUser.Should().BeEquivalentTo(expected, options => options
+                                                            .Excluding(u => u.Lots)
+                                                            .Excluding(u => u.Purchases)
+                                                            .Excluding(u => u.Role));
+            actualUser.Role.Should().NotBeNull();
         }
 
         [Test]
