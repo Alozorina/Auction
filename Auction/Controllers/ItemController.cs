@@ -43,20 +43,24 @@ namespace Auction.Controllers
             return Ok(items);
         }
 
+        [ValidateToken]
+        [Authorize(Roles = "Admin, User")]
         [HttpGet("lots/user={id}")]
         public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetLotsByUserId(int id)
         {
             var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
-            var lots = items.Where(i => i.OwnerId == id).OrderByDescending(i => i.StartSaleDate).ToList();
+            var lots = items.Where(i => i.OwnerId == id).OrderBy(i => i.StartSaleDate).ToList();
             _logger.Log(LogLevel.Debug, $"Returned {lots.Count} lots from database.");
             return Ok(lots);
         }
 
+        [ValidateToken]
+        [Authorize(Roles = "Admin, User")]
         [HttpGet("purchases/user={id}")]
         public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetPurchasesByUserId(int id)
         {
             var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
-            var purchases = items.Where(i => i.BuyerId == id).OrderByDescending(i => i.StartSaleDate).ToList();
+            var purchases = items.Where(i => i.BuyerId == id).OrderBy(i => i.StartSaleDate).ToList();
             _logger.Log(LogLevel.Debug, $"Returned {purchases.Count} purchases from database.");
             return Ok(purchases);
         }

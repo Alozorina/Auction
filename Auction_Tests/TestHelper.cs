@@ -101,6 +101,7 @@ namespace Auction_Tests
                 StartingPrice = 60m,
                 StatusId = 2,
                 OwnerId = 1,
+                BuyerId = 2,
                 StartSaleDate = new DateTime(2022, 07, 09, 10, 00, 00),
                 EndSaleDate = new DateTime(2022, 08, 10, 12, 00, 00),
             },
@@ -113,8 +114,9 @@ namespace Auction_Tests
                 StartingPrice = 60m,
                 StatusId = 1,
                 OwnerId = 1,
-                StartSaleDate = new DateTime(2022, 07, 09, 10, 00, 00),
-                EndSaleDate = new DateTime(2022, 08, 10, 12, 00, 00),
+                BuyerId = 2,
+                StartSaleDate = new DateTime(2022, 10, 09, 10, 00, 00),
+                EndSaleDate = new DateTime(2022, 12, 10, 12, 00, 00),
             }
         };
 
