@@ -499,7 +499,7 @@ namespace DAL.Migrations
                             Email = "janemail@mail.com",
                             FirstName = "Jane",
                             LastName = "Doe",
-                            Password = "passwordJane",
+                            Password = "$2a$11$J03pGeqUE6CaD5YnAgH2/.a5YTtAzutzJj8WHBzu7wpe4a9iOswl6",
                             RoleId = 2
                         },
                         new
@@ -509,7 +509,7 @@ namespace DAL.Migrations
                             Email = "johnmail@mail.com",
                             FirstName = "John",
                             LastName = "Doe",
-                            Password = "passwordJohn",
+                            Password = "$2a$11$aNSJVlkVUD.Pey9VMhjWa.nvu2xrWWyHEG8.u00rE//FuChtVQoZO",
                             RoleId = 1
                         },
                         new
@@ -519,7 +519,7 @@ namespace DAL.Migrations
                             Email = "peter@mail.com",
                             FirstName = "Peter",
                             LastName = "Choi",
-                            Password = "password123",
+                            Password = "$2a$11$MGdcEAp/9uHaOzXq7ytxU.2QUYiZviot2cqOaCo.glRWO9wYQo/UC",
                             RoleId = 1
                         },
                         new
@@ -529,7 +529,7 @@ namespace DAL.Migrations
                             Email = "dana@mail.com",
                             FirstName = "Dana",
                             LastName = "Meng",
-                            Password = "password123",
+                            Password = "$2a$11$YHH96qbt92vvatfgjvt2huT2oAx7KazrnylNXzbeAT50issPy7HLa",
                             RoleId = 1
                         });
                 });

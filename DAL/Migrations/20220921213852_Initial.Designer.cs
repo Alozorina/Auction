@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Migrations
 {
     [DbContext(typeof(AuctionDbContext))]
-    [Migration("20220622113645_UserBirthdayUpdate")]
-    partial class UserBirthdayUpdate
+    [Migration("20220921213852_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,84 +20,6 @@ namespace DAL.Migrations
                 .HasAnnotation("ProductVersion", "3.1.26")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("DAL.Entities.Auction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(1500)")
-                        .HasMaxLength(1500);
-
-                    b.Property<DateTime>("EndSaleDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("StartSaleDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StatusId");
-
-                    b.ToTable("Auctions");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this June. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
-                            EndSaleDate = new DateTime(2022, 7, 1, 20, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Steve Johnson's Bright Colors",
-                            StartSaleDate = new DateTime(2022, 6, 27, 14, 0, 0, 0, DateTimeKind.Unspecified),
-                            StatusId = 1
-                        });
-                });
-
-            modelBuilder.Entity("DAL.Entities.AuctionCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("AuctionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuctionId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("AuctionCategories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AuctionId = 1,
-                            CategoryId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            AuctionId = 1,
-                            CategoryId = 2
-                        });
-                });
 
             modelBuilder.Entity("DAL.Entities.Category", b =>
                 {
@@ -159,11 +81,13 @@ namespace DAL.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("AuctionId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("BuyerId")
                         .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(80)")
+                        .HasMaxLength(80);
 
                     b.Property<decimal>("CurrentBid")
                         .HasColumnType("decimal(18,2)");
@@ -171,6 +95,9 @@ namespace DAL.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(1000)")
                         .HasMaxLength(1000);
+
+                    b.Property<DateTime>("EndSaleDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -180,6 +107,9 @@ namespace DAL.Migrations
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("StartSaleDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("StartingPrice")
                         .HasColumnType("decimal(18,2)");
 
@@ -187,8 +117,6 @@ namespace DAL.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AuctionId");
 
                     b.HasIndex("BuyerId");
 
@@ -202,22 +130,92 @@ namespace DAL.Migrations
                         new
                         {
                             Id = 1,
-                            AuctionId = 1,
+                            CreatedBy = "Steve Johnson",
                             CurrentBid = 0m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
+                            EndSaleDate = new DateTime(2023, 8, 15, 22, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Blue Marble",
                             OwnerId = 1,
+                            StartSaleDate = new DateTime(2023, 5, 22, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             StartingPrice = 50m,
-                            StatusId = 1
+                            StatusId = 2
                         },
                         new
                         {
                             Id = 2,
-                            AuctionId = 1,
+                            CreatedBy = "Steve Johnson",
                             CurrentBid = 0m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
+                            EndSaleDate = new DateTime(2023, 8, 15, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Revolution",
                             OwnerId = 2,
+                            StartSaleDate = new DateTime(2022, 12, 12, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             StartingPrice = 60m,
-                            StatusId = 1
+                            StatusId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedBy = "Steve Johnson",
+                            CurrentBid = 40m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
+                            EndSaleDate = new DateTime(2023, 8, 15, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Sunset",
+                            OwnerId = 2,
+                            StartSaleDate = new DateTime(2023, 3, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartingPrice = 30m,
+                            StatusId = 4
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BuyerId = 11,
+                            CreatedBy = "Steve Johnson",
+                            CurrentBid = 20m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
+                            EndSaleDate = new DateTime(2022, 8, 3, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Spinning Around",
+                            OwnerId = 6,
+                            StartSaleDate = new DateTime(2022, 6, 14, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartingPrice = 5m,
+                            StatusId = 5
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedBy = "Steve Johnson",
+                            CurrentBid = 70m,
+                            Description = "Following the success of the inaugural edition in March 2021, consignments are now open for the second iteration of Veiling Steve Johnson's Bright Colors auction this July. Running the gamut of the avant-garde from the late 19th century through to artists working today, the sale presents exceptional artworks by artists who dared to innovate and experiment over the course of 150 years.",
+                            EndSaleDate = new DateTime(2023, 8, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Antarctica Is Changing",
+                            OwnerId = 6,
+                            StartSaleDate = new DateTime(2022, 7, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartingPrice = 60m,
+                            StatusId = 4
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedBy = "Jesse Zheng",
+                            CurrentBid = 70m,
+                            EndSaleDate = new DateTime(2023, 8, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Green Hills",
+                            OwnerId = 6,
+                            StartSaleDate = new DateTime(2022, 7, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartingPrice = 60m,
+                            StatusId = 4
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedBy = "Pawel Czerwinski",
+                            CurrentBid = 0m,
+                            EndSaleDate = new DateTime(2023, 8, 19, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Black Gold",
+                            OwnerId = 11,
+                            StartSaleDate = new DateTime(2022, 8, 9, 11, 0, 0, 0, DateTimeKind.Unspecified),
+                            StartingPrice = 60m,
+                            StatusId = 2
                         });
                 });
 
@@ -266,48 +264,125 @@ namespace DAL.Migrations
                             Id = 4,
                             CategoryId = 2,
                             ItemId = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CategoryId = 2,
+                            ItemId = 3
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CategoryId = 2,
+                            ItemId = 4
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CategoryId = 2,
+                            ItemId = 5
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CategoryId = 1,
+                            ItemId = 2
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CategoryId = 1,
+                            ItemId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CategoryId = 1,
+                            ItemId = 3
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CategoryId = 1,
+                            ItemId = 4
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CategoryId = 1,
+                            ItemId = 5
                         });
                 });
 
-            modelBuilder.Entity("DAL.Entities.Owner", b =>
+            modelBuilder.Entity("DAL.Entities.ItemPhoto", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Email")
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Path")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(50)")
-                        .HasMaxLength(50);
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(50)")
-                        .HasMaxLength(50);
-
                     b.HasKey("Id");
 
-                    b.ToTable("Owners");
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ItemPhoto");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
-                            Email = "jbush@mail.com",
-                            FirstName = "Jack",
-                            LastName = "Bush"
+                            ItemId = 1,
+                            Path = "steve-johnson-unsplash.jpg"
                         },
                         new
                         {
                             Id = 2,
-                            Email = "lewinski@mail.com",
-                            FirstName = "Monika",
-                            LastName = "Lewinski"
+                            ItemId = 2,
+                            Path = "pexels-steve-johnson-1840624.jpg"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ItemId = 3,
+                            Path = "pexels-steve-johnson-1174000.jpg"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ItemId = 4,
+                            Path = "pexels-steve-johnson-1286632.jpg"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ItemId = 5,
+                            Path = "steve-johnson-RzykwoNjoLw-unsplash.jpg"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ItemId = 5,
+                            Path = "steve-johnson-RzykwoNjoLw-unsplash-mockup.jpg"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ItemId = 6,
+                            Path = "pexels-jesse-zheng-732548.jpg"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ItemId = 7,
+                            Path = "pawel-czerwinski-xubOAAKUwXc-unsplash.jpg"
                         });
                 });
 
@@ -362,7 +437,7 @@ namespace DAL.Migrations
                         new
                         {
                             Id = 2,
-                            Name = "Approved"
+                            Name = "Upcoming"
                         },
                         new
                         {
@@ -426,7 +501,7 @@ namespace DAL.Migrations
                             Email = "janemail@mail.com",
                             FirstName = "Jane",
                             LastName = "Doe",
-                            Password = "passwordJane",
+                            Password = "$2a$11$J03pGeqUE6CaD5YnAgH2/.a5YTtAzutzJj8WHBzu7wpe4a9iOswl6",
                             RoleId = 2
                         },
                         new
@@ -436,48 +511,38 @@ namespace DAL.Migrations
                             Email = "johnmail@mail.com",
                             FirstName = "John",
                             LastName = "Doe",
-                            Password = "passwordJohn",
+                            Password = "$2a$11$aNSJVlkVUD.Pey9VMhjWa.nvu2xrWWyHEG8.u00rE//FuChtVQoZO",
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            BirthDate = new DateTime(1980, 2, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "peter@mail.com",
+                            FirstName = "Peter",
+                            LastName = "Choi",
+                            Password = "$2a$11$MGdcEAp/9uHaOzXq7ytxU.2QUYiZviot2cqOaCo.glRWO9wYQo/UC",
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            BirthDate = new DateTime(1997, 8, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "dana@mail.com",
+                            FirstName = "Dana",
+                            LastName = "Meng",
+                            Password = "$2a$11$YHH96qbt92vvatfgjvt2huT2oAx7KazrnylNXzbeAT50issPy7HLa",
                             RoleId = 1
                         });
                 });
 
-            modelBuilder.Entity("DAL.Entities.Auction", b =>
-                {
-                    b.HasOne("DAL.Entities.Status", "Status")
-                        .WithMany("Auctions")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DAL.Entities.AuctionCategory", b =>
-                {
-                    b.HasOne("DAL.Entities.Auction", "Auction")
-                        .WithMany("AuctionCategories")
-                        .HasForeignKey("AuctionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.Entities.Category", "Category")
-                        .WithMany("AuctionCategories")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("DAL.Entities.Item", b =>
                 {
-                    b.HasOne("DAL.Entities.Auction", "Auction")
-                        .WithMany("Items")
-                        .HasForeignKey("AuctionId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("DAL.Entities.User", "Buyer")
                         .WithMany("Purchases")
                         .HasForeignKey("BuyerId");
 
-                    b.HasOne("DAL.Entities.Owner", "Owner")
+                    b.HasOne("DAL.Entities.User", "Owner")
                         .WithMany("Lots")
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -500,6 +565,15 @@ namespace DAL.Migrations
 
                     b.HasOne("DAL.Entities.Item", "Item")
                         .WithMany("ItemCategories")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DAL.Entities.ItemPhoto", b =>
+                {
+                    b.HasOne("DAL.Entities.Item", null)
+                        .WithMany("ItemPhotos")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
