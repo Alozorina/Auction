@@ -21,8 +21,6 @@ namespace Auction_Tests
         JsonSerializerSettings _serializerSettings;
         private const string RequestUri = "api/item/";
         private string _token;
-        static List<Item> _clonedItems = new List<Item>(TestHelper.items);
-        string _publicInfoItems;
 
         [SetUp]
         public async Task Setup()
@@ -31,13 +29,14 @@ namespace Auction_Tests
             _client = _factory.CreateClient();
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-            if (_serializerSettings == null || _publicInfoItems == null)
+            
+            if (_serializerSettings == null)
             {
                 //arrange
                 _serializerSettings = TestHelper.GetSerializerSettings();
-                _publicInfoItems = JsonConvert.SerializeObject(expectedResult_GetPublicSortedByStartDate, _serializerSettings);
             }
         }
+
 
 
         [Test]
@@ -49,7 +48,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_publicInfoItems);
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
         }
 
         [Test]
@@ -61,7 +60,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_publicInfoItems);
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
         }
 
         [Test]
@@ -86,7 +85,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_publicInfoItems);
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
         }
 
         [Test]
@@ -102,22 +101,60 @@ namespace Auction_Tests
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
+        [Test]
+        public async Task Search_ReturnsCorrectResult()
+        {
+            //arrange
+            string searchInput = "test";
+
+            // act
+            var httpResponse = await _client.GetAsync(RequestUri + $"search={searchInput}");
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
+        }
+
+        [Test]
+        public async Task GetAll_AvailableForAdmin()
+        {
+            //arrange
+            var expected = TestHelper.items;
+
+            // act
+            var httpResponse = await _client.GetAsync(RequestUri + "private");
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            var stringResponse = await httpResponse.Content.ReadAsStringAsync();
+            var actual = JsonConvert.DeserializeObject<IEnumerable<Item>>(stringResponse).ToList();
+
+            actual.Should().BeEquivalentTo(expected, options => options
+                                                            .Excluding(i => i.Owner)
+                                                            .Excluding(i => i.Buyer)
+                                                            .Excluding(i => i.ItemCategories)
+                                                            .Excluding(i => i.ItemPhotos)
+                                                            .Excluding(i => i.Status.Items));
+        }
+
         #region TestData
-        static readonly List<ItemPublicInfo> expectedResult_GetPublicSortedByStartDate = new List<ItemPublicInfo>() {
+
+        List<ItemPublicInfo> GetPublicSortedByStartDate(List<Item> items) => new List<ItemPublicInfo>() {
             new ItemPublicInfo{
-                Id = _clonedItems[0].Id,
-                Name = _clonedItems[0].Name,
-                CreatedBy = _clonedItems[0].CreatedBy,
-                OwnerId = _clonedItems[0].OwnerId,
-                BuyerId = _clonedItems[0].BuyerId,
-                Description = _clonedItems[0].Description,
-                StartingPrice = _clonedItems[0].StartingPrice,
-                CurrentBid = _clonedItems[0].CurrentBid,
-                StartSaleDate = _clonedItems[0].StartSaleDate,
-                EndSaleDate = _clonedItems[0].EndSaleDate,
-                ItemPhotos = _clonedItems[0].ItemPhotos,
-                Status = _clonedItems[0].Status.Name,
-                ItemCategories = _clonedItems[0].ItemCategories
+                Id = items[0].Id,
+                Name = items[0].Name,
+                CreatedBy = items[0].CreatedBy,
+                OwnerId = items[0].OwnerId,
+                BuyerId = items[0].BuyerId,
+                Description = items[0].Description,
+                StartingPrice = items[0].StartingPrice,
+                CurrentBid = items[0].CurrentBid,
+                StartSaleDate = items[0].StartSaleDate,
+                EndSaleDate = items[0].EndSaleDate,
+                ItemPhotos = items[0].ItemPhotos,
+                Status = items[0].Status.Name,
+                ItemCategories = items[0].ItemCategories
                                 .Select(ic =>
                                 {
                                     ic.Item = null;
@@ -127,19 +164,19 @@ namespace Auction_Tests
                                 .ToList()
             },
             new ItemPublicInfo{
-                Id = _clonedItems[1].Id,
-                Name = _clonedItems[1].Name,
-                CreatedBy = _clonedItems[1].CreatedBy,
-                OwnerId = _clonedItems[1].OwnerId,
-                BuyerId = _clonedItems[1].BuyerId,
-                Description = _clonedItems[1].Description,
-                StartingPrice = _clonedItems[1].StartingPrice,
-                CurrentBid = _clonedItems[1].CurrentBid,
-                StartSaleDate = _clonedItems[1].StartSaleDate,
-                EndSaleDate = _clonedItems[1].EndSaleDate,
-                ItemPhotos = _clonedItems[1].ItemPhotos,
-                Status = _clonedItems[1].Status.Name,
-                ItemCategories = _clonedItems[1].ItemCategories
+                Id = items[1].Id,
+                Name = items[1].Name,
+                CreatedBy = items[1].CreatedBy,
+                OwnerId = items[1].OwnerId,
+                BuyerId = items[1].BuyerId,
+                Description = items[1].Description,
+                StartingPrice = items[1].StartingPrice,
+                CurrentBid = items[1].CurrentBid,
+                StartSaleDate = items[1].StartSaleDate,
+                EndSaleDate = items[1].EndSaleDate,
+                ItemPhotos = items[1].ItemPhotos,
+                Status = items[1].Status.Name,
+                ItemCategories = items[1].ItemCategories
                                 .Select(ic =>
                                 {
                                     ic.Item = null;
@@ -149,6 +186,20 @@ namespace Auction_Tests
                                 .ToList()
             }
         };
+
+        readonly string jsonDataGetPublicSortedByStartDate = "[{\"$id\":\"1\",\"id\":1,\"name\":\"TestItem1\",\"createdBy\":" +
+            "\"Test Author\",\"ownerId\":1,\"buyerId\":2,\"description\":null,\"startingPrice" +
+            "\":60.0,\"currentBid\":70.0,\"startSaleDate\":\"2022-07-09T10:00:00\"," +
+            "\"endSaleDate\":\"2022-08-10T12:00:00\",\"itemCategories\":[{\"$id\":\"2\"," +
+            "\"itemId\":1,\"item\":null,\"categoryId\":1,\"category\":{\"$id\":\"3\",\"name\":\"Category1\"," +
+            "\"itemCategories\":null,\"id\":1},\"id\":1}],\"itemPhotos\":null,\"status\":\"test_Status2\"}," +
+            "{\"$id\":\"4\",\"id\":2,\"name\":\"TestItem2\",\"createdBy\":\"Test Author2\",\"ownerId\":1," +
+            "\"buyerId\":2,\"description\":null,\"startingPrice\":60.0,\"currentBid\":70.0," +
+            "\"startSaleDate\":\"2022-10-09T10:00:00\",\"endSaleDate\":\"2022-12-10T12:00:00\"," +
+            "\"itemCategories\":[{\"$id\":\"5\",\"itemId\":2,\"item\":null,\"categoryId\":2," +
+            "\"category\":{\"$id\":\"6\",\"name\":\"Category2\",\"itemCategories\":null,\"id\":2},\"id\":2}]," +
+            "\"itemPhotos\":null,\"status\":\"test_Status1\"}]";
+
         #endregion
     }
 }
