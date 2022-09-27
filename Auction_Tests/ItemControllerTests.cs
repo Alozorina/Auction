@@ -182,31 +182,30 @@ namespace Auction_Tests
         [Test]
         public async Task Add_AddsNewItem()
         {
-            //arrange
-            var stream = File.OpenRead(@"TestPhotos\test.jpg");
-            FormFile file = new FormFile(stream, 0, stream.Length, "ItemFormFilePhotos", "test.jpg");
-            file.ContentDisposition = "form-data; name = \"ItemFormFilePhotos\"; filename = \"test.jpg\"";
-
-            ItemCreateNewEntity newItemData = new ItemCreateNewEntity()
-            {
-                Name = "TestItem3",
-                CreatedBy = "Test Author3",
-                StartingPrice = 20m,
-                OwnerId = 1,
-                StartSaleDate = new DateTime(2023, 10, 09, 10, 00, 00),
-                EndSaleDate = new DateTime(2023, 12, 10, 12, 00, 00),
-                ItemFormFilePhotos = new List<IFormFile>() { file }
-            };
-            var expectedJson = JsonConvert.SerializeObject(newItemData);
-            var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
-
             // act
-            var httpResponse = await _client.PostAsync(RequestUri, stringContent);
+            HttpResponseMessage httpResponse;
+
+            using (var fileStream = File.OpenRead(@"TestPhotos\test.jpg"))
+            using (var content = new StreamContent(fileStream))
+            using (var formData = new MultipartFormDataContent())
+            {
+                // Add file (file, field name, file name)
+                formData.Add(new StringContent("TestItem3"), "Name");
+                formData.Add(new StringContent("Test Author3"), "CreatedBy");
+                formData.Add(new StringContent("20"), "StartingPrice");
+                formData.Add(new StringContent("1"), "OwnerId");
+                formData.Add(new StringContent("2023-01-21"), "StartSaleDate");
+                formData.Add(new StringContent("2023-02-21"), "EndSaleDate");
+                formData.Add(content, "ItemFormFilePhotos", "test.jpg");
+                httpResponse = await _client.PostAsync(RequestUri, formData);
+            }
 
             // assert
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             httpResponse.EnsureSuccessStatusCode();
-            responseJson.Should().NotBeNull();
+            responseJson.Should().Contain("TestItem3");
+
+            httpResponse.Dispose();
         }
 
         #region TestData
