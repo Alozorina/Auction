@@ -110,7 +110,7 @@ namespace Auction.Controllers
             return Ok(item);
         }
 
-        [ValidateToken]
+        //[ValidateToken]
         [Authorize(Roles = "Admin, User")]
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] ItemCreateNewEntity value)

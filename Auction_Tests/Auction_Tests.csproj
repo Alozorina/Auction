@@ -24,4 +24,14 @@
     <ProjectReference Include="..\Auction\Auction.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestPhotos\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestPhotos\test.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -99,7 +99,7 @@ namespace Auction_Tests
                 CreatedBy = "Test Author",
                 CurrentBid = 70,
                 StartingPrice = 60m,
-                StatusId = 2,
+                StatusId = 5,
                 OwnerId = 1,
                 BuyerId = 2,
                 StartSaleDate = new DateTime(2022, 07, 09, 10, 00, 00),
@@ -129,7 +129,7 @@ namespace Auction_Tests
             },
             new Status
             {
-                Id = 2,
+                Id = 5,
                 Name = "test_Status2",
             }
         };
@@ -160,6 +160,22 @@ namespace Auction_Tests
                 CategoryId = 2,
                 ItemId = 2
             }
+        };
+
+        public static List<ItemPhoto> itemPhotos = new List<ItemPhoto>()
+        {
+            new ItemPhoto
+                {
+                    Id = 1,
+                    Path = "steve-johnson-unsplash.jpg",
+                    ItemId = 1
+                },
+                new ItemPhoto
+                {
+                    Id = 2,
+                    Path = "pexels-steve-johnson-1840624.jpg",
+                    ItemId = 2
+                }
         };
 
         public static string EmptyArrayResponseHandler(string response) => response.Replace("[]", "null");
@@ -199,5 +215,6 @@ namespace Auction_Tests
 
             return await httpResponse.Content.ReadAsStringAsync();
         }
+
     }
 }
