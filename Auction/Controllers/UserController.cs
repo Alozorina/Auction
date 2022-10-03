@@ -145,8 +145,6 @@ namespace Auction.Controllers
             {
                 var update = _mapper.Map(updateModel, currentUser);
                 update.BirthDate = DataConverter.ConvertDateFromClient(updateModel.BirthDate);
-
-                await _unitOfWork.UserRepository.UpdateAsync(update);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
@@ -164,13 +162,7 @@ namespace Auction.Controllers
             var currentUser = await GetUser();
             try
             {
-                bool isPasswordOk = UserValidation.IsClientPasswordValid(updateModel.OldPassword, currentUser.Password);
-                if (!isPasswordOk)
-                    throw new AuctionException("Wrong Password");
-
-                var update = _mapper.Map(updateModel, currentUser);
-
-                await _unitOfWork.UserRepository.UpdatePassword(update);
+                _unitOfWork.UserRepository.UpdatePassword(currentUser, updateModel);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
@@ -188,9 +180,7 @@ namespace Auction.Controllers
             var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
             try
             {
-                var update = _mapper.Map(updateModel, user);
-
-                await _unitOfWork.UserRepository.UpdateAsync(update);
+                _mapper.Map(updateModel, user);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
@@ -208,10 +198,8 @@ namespace Auction.Controllers
             var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
             try
             {
-                var update = _mapper.Map(updateModel, user);
-                await _unitOfWork.UserRepository.UpdatePassword(update);
+                _unitOfWork.UserRepository.UpdatePassword(user, updateModel);
                 await _unitOfWork.SaveAsync();
-
             }
             catch (AuctionException ex)
             {
@@ -225,14 +213,10 @@ namespace Auction.Controllers
         [HttpPut("{id}/role")]
         public async Task<ActionResult> UpdateRoleById(int id, [FromBody] int roleId)
         {
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
-
             try
             {
                 Role role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == roleId);
-                user.RoleId = roleId;
-                user.Role = role;
-                await _unitOfWork.UserRepository.UpdateRole(user);
+                await _unitOfWork.UserRepository.UpdateRole(id, role);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)

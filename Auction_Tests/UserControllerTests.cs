@@ -301,7 +301,7 @@ namespace Auction_Tests
             var stringContent = new StringContent(newPasswordJson, Encoding.UTF8, "application/json");
 
             // act
-            var httpResponse = await _client.PutAsync(RequestUri + "1/creds", stringContent);
+            var httpResponse = await _client.PutAsync(RequestUri + "2/creds", stringContent);
 
             // assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);

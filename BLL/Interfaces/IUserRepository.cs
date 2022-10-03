@@ -1,4 +1,5 @@
-﻿using DAL.Entities;
+﻿using BLL.Models;
+using DAL.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,8 +9,8 @@ namespace DAL.Interfaces
     {
         Task<IEnumerable<User>> GetAllWithDetailsAsync();
         Task<User> GetByIdWithDetailsAsync(int id);
-        Task UpdateRole(User model);
-        Task UpdatePassword(User model);
+        Task UpdateRole(int userId, Role role);
+        void UpdatePassword(User user, UserPassword userPassword);
         Task<User> Login(string email, string password);
     }
 }

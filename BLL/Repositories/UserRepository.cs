@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.Models;
 using BLL.Validation;
 using DAL.Data;
 using DAL.Entities;
@@ -112,33 +113,24 @@ namespace DAL.Repositories
             existingEntity.RoleId = model.RoleId;
         }
 
-        public async Task UpdatePassword(User model)
+        public void UpdatePassword(User user, UserPassword userPassword)
         {
-            try
-            {
-                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
-
-                if (existingEntity != null)
-                {
-                    existingEntity.Password = HashHandler.HashPassword(model.Password);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{Repo} UpdatePassword function error", typeof(UserRepository));
-            }
+            if (user != null && HashHandler.Verify(userPassword.OldPassword, user.Password))
+                user.Password = HashHandler.HashPassword(userPassword.NewPassword);
+            else
+                throw new AuctionException("Wrong password");
         }
 
-        public async Task UpdateRole(User model)
+        public async Task UpdateRole(int userId, Role role)
         {
             try
             {
-                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
+                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == userId);
 
                 if (existingEntity != null)
                 {
-                    existingEntity.RoleId = model.RoleId;
-                    existingEntity.Role = model.Role;
+                    existingEntity.RoleId = role.Id;
+                    existingEntity.Role = role;
                 }
             }
             catch (Exception ex)
