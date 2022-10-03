@@ -58,7 +58,7 @@ namespace Auction.Controllers
             if (user == null)
             {
                 _logger.Log(LogLevel.Error, $"Account with id: {id}, hasn't been found in db.");
-                return BadRequest($"Account with id: {id}, hasn't been found in db.");
+                return NotFound($"Account with id: {id}, hasn't been found in db.");
             }
 
             return Ok(user);
@@ -231,15 +231,17 @@ namespace Auction.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            try
+            {
+                await _unitOfWork.UserRepository.DeleteByIdAsync(id);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return NotFound(ex.Message);
+            }
 
-            if (user == null)
-                return BadRequest();
-
-            await _unitOfWork.UserRepository.DeleteByIdAsync(id);
-            await _unitOfWork.SaveAsync();
-
-            return Ok(user);
+            return Ok($"User with Id: {id} deleted successfully");
         }
 
         private async Task<User> GetUser()

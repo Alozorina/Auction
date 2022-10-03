@@ -340,7 +340,7 @@ namespace Auction_Tests
             // assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             getUser_BeforeDelete.EnsureSuccessStatusCode();
-            getUser_AfterDelete.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            getUser_AfterDelete.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         #region TestData
