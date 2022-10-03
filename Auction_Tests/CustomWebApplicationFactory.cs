@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 using System.Linq;
 
 namespace Auction_Tests
@@ -12,24 +13,26 @@ namespace Auction_Tests
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.ConfigureServices(services =>
-            {
-                RemoveLibraryDbContext(services);
-
-                var serviceProvider = GetInMemoryServiceProvider();
-
-                services.AddDbContextPool<AuctionDbContext>(options =>
+            builder
+                .UseContentRoot(TestHelper.GetDirectory())
+                .ConfigureServices(services =>
                 {
-                    options.UseInMemoryDatabase("TestDb");
-                    options.UseInternalServiceProvider(serviceProvider);
+                    RemoveLibraryDbContext(services);
+
+                    var serviceProvider = GetInMemoryServiceProvider();
+
+                    services.AddDbContextPool<AuctionDbContext>(options =>
+                    {
+                        options.UseInMemoryDatabase("TestDb");
+                        options.UseInternalServiceProvider(serviceProvider);
+                    });
+
+                    using (var scope = services.BuildServiceProvider().CreateScope())
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<AuctionDbContext>();
+                        TestHelper.SeedData(context);
+                    }
                 });
-
-                using (var scope = services.BuildServiceProvider().CreateScope())
-                {
-                    var context = scope.ServiceProvider.GetRequiredService<AuctionDbContext>();
-                    TestHelper.SeedData(context);
-                }
-            });
         }
 
         private static ServiceProvider GetInMemoryServiceProvider()

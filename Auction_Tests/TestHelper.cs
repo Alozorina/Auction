@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -99,7 +100,7 @@ namespace Auction_Tests
                 CreatedBy = "Test Author",
                 CurrentBid = 70,
                 StartingPrice = 60m,
-                StatusId = 5,
+                StatusId = 1,
                 OwnerId = 1,
                 BuyerId = 2,
                 StartSaleDate = new DateTime(2022, 07, 09, 10, 00, 00),
@@ -112,7 +113,7 @@ namespace Auction_Tests
                 CreatedBy = "Test Author2",
                 CurrentBid = 70,
                 StartingPrice = 60m,
-                StatusId = 1,
+                StatusId = 5,
                 OwnerId = 1,
                 BuyerId = 2,
                 StartSaleDate = new DateTime(2022, 10, 09, 10, 00, 00),
@@ -165,17 +166,17 @@ namespace Auction_Tests
         public static List<ItemPhoto> itemPhotos = new List<ItemPhoto>()
         {
             new ItemPhoto
-                {
-                    Id = 1,
-                    Path = "steve-johnson-unsplash.jpg",
-                    ItemId = 1
-                },
-                new ItemPhoto
-                {
-                    Id = 2,
-                    Path = "pexels-steve-johnson-1840624.jpg",
-                    ItemId = 2
-                }
+            {
+                Id = 1,
+                Path = "steve-johnson-unsplash.jpg",
+                ItemId = 1
+            },
+            new ItemPhoto
+            {
+                Id = 2,
+                Path = "pexels-steve-johnson-1840624.jpg",
+                ItemId = 2
+            }
         };
 
         public static string EmptyArrayResponseHandler(string response) => response.Replace("[]", "null");
@@ -214,6 +215,25 @@ namespace Auction_Tests
             var httpResponse = await client.PostAsync("api/user/login", stringContent);
 
             return await httpResponse.Content.ReadAsStringAsync();
+        }
+
+        public static string GetDirectory()
+        {
+            var fullDir = Directory.GetCurrentDirectory();
+            var endIndex = fullDir.IndexOf(@"\bin");
+            return fullDir[0..endIndex];
+        }
+
+        public static string GetStringFromStartToEnd(string strSource, string strStart, string strEnd)
+        {
+            if (strSource.Contains(strStart) && strSource.Contains(strEnd))
+            {
+                int start, end;
+                start = strSource.IndexOf(strStart, 0);
+                end = strSource.IndexOf(strEnd, start) + strEnd.Length;
+                return strSource[start..end];
+            }
+            return "";
         }
 
     }
