@@ -7,7 +7,7 @@ namespace DAL.Interfaces
 {
     public interface IItemRepository : IRepository<Item>
     {
-        Task<bool> UpdateBidByIdAsync(int id, decimal newBid);
+        bool UpdateBidByIdAsync(Item item, ItemUpdateBid data);
         Task<IEnumerable<Item>> GetAllWithDetailsAsync();
         Task<Item> GetByIdWithDetailsAsync(int id);
         Task<List<ItemPublicInfo>> GetAllPublicWithDetailsAsync(AutoMapper.IMapper mapper);

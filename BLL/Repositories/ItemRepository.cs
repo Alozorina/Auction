@@ -16,7 +16,12 @@ namespace DAL.Repositories
         public ItemRepository(AuctionDbContext context, ILogger logger) : base(context, logger)
         {
         }
-
+        /// <summary>
+        /// Gets all items from the database, maps them to <ItemPublicInfo> and makes the nested navigation properties null
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains <List<ItemPublicInfo>> that contains elements from the input sequence
+        /// </returns>
         public async Task<List<ItemPublicInfo>> GetAllPublicWithDetailsAsync(AutoMapper.IMapper mapper)
         {
             var items = await GetAllWithDetailsAsync();
@@ -24,19 +29,36 @@ namespace DAL.Repositories
                 .Select(item =>
                 {
                     var publicItem = mapper.Map<ItemPublicInfo>(item);
-                    publicItem.ItemCategories = publicItem.ItemCategories.Select(ic =>
+                    publicItem.ItemCategories = publicItem.ItemCategories
+                    .Select(ic => new ItemCategory
                     {
-                        ic.Item = null;
-                        ic.Category.ItemCategories = null;
-                        return ic;
+                        Id = ic.Id,
+                        CategoryId = ic.CategoryId,
+                        ItemId = ic.ItemId,
+                        Category = new Category
+                        {
+                            Id = ic.Id,
+                            Name = ic.Category.Name
+                        }
                     })
                     .ToList();
+                    publicItem.Status = new Status()
+                    {
+                        Id = publicItem.Status.Id,
+                        Name = publicItem.Status.Name
+                    };
                     return publicItem;
                 })
                 .OrderBy(i => i.StartSaleDate)
                 .ToList();
         }
 
+        /// <summary>
+        /// Gets all items from the database with navigation properties
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains <List<ItemPublicInfo>> that contains elements from the input sequence
+        /// </returns>
         public async Task<IEnumerable<Item>> GetAllWithDetailsAsync()
         {
             try
@@ -57,6 +79,12 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets all items from the database with navigation properties
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains a single <Item> that satisfies the value of "id"
+        /// </returns>
         public async Task<Item> GetByIdWithDetailsAsync(int id)
         {
             try
@@ -77,6 +105,9 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets all items from the database with navigation properties
+        /// </summary>
         public override async Task UpdateAsync(Item entity)
         {
             try
@@ -99,14 +130,14 @@ namespace DAL.Repositories
             }
         }
 
-        public async Task<bool> UpdateBidByIdAsync(int id, decimal newBid)
+        public bool UpdateBidByIdAsync(Item item, ItemUpdateBid data)
         {
             try
             {
-                var existingEntity = await dbSet.FindAsync(id);
-                if (existingEntity != null)
+                if (item != null)
                 {
-                    existingEntity.CurrentBid = newBid;
+                    item.CurrentBid = data.CurrentBid;
+                    item.BuyerId = data.BuyerId;
                     return true;
                 }
                 return false;

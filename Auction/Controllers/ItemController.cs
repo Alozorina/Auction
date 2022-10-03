@@ -110,7 +110,7 @@ namespace Auction.Controllers
             return Ok(item);
         }
 
-        //[ValidateToken]
+        [ValidateToken]
         [Authorize(Roles = "Admin, User")]
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] ItemCreateNewEntity value)
@@ -151,7 +151,7 @@ namespace Auction.Controllers
                 string extension = file.FileName.Substring(file.FileName.LastIndexOf('.'));
                 if (imageExtensions.Contains(extension.ToUpperInvariant()))
                 {
-                    string uniqueFileName = Guid.NewGuid().GetHashCode().ToString() + "_" + file.FileName;
+                    string uniqueFileName = "veiling_" + Guid.NewGuid().GetHashCode().ToString() + "_" + file.FileName;
                     uploadedFileNames.Add(uniqueFileName);
                     string filePath = Path.Combine(path, uniqueFileName);
                     using (var stream = new FileStream(filePath, FileMode.Create))
@@ -170,12 +170,10 @@ namespace Auction.Controllers
         {
             if (data == null)
                 return BadRequest();
-
             var item = await _unitOfWork.ItemRepository.GetByIdAsync(id);
             try
             {
-                var mapped = _mapper.Map(data, item);
-                await _unitOfWork.ItemRepository.UpdateAsync(mapped);
+                _unitOfWork.ItemRepository.UpdateBidByIdAsync(item, data);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
@@ -188,13 +186,15 @@ namespace Auction.Controllers
         [ValidateToken]
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/edit")]
-        public async Task<ActionResult> Update(int Id, [FromBody] Item value)
+        public async Task<ActionResult> Update(int id, [FromBody] ItemPublicInfo value)
         {
-            if (Id != value.Id)
-                return BadRequest();
+            if (id != value.Id)
+                return BadRequest("Wrong Id");
+
             try
             {
-                await _unitOfWork.ItemRepository.UpdateAsync(value);
+                var mapped = _mapper.Map<Item>(value);
+                await _unitOfWork.ItemRepository.UpdateAsync(mapped);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
@@ -209,20 +209,17 @@ namespace Auction.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var item = await _unitOfWork.ItemRepository.GetByIdAsync(id);
             try
             {
-                if (item == null)
-                    return BadRequest();
-
                 await _unitOfWork.ItemRepository.DeleteByIdAsync(id);
                 await _unitOfWork.SaveAsync();
             }
             catch (AuctionException ex)
             {
-                return BadRequest(ex.Message);
+                return NotFound(ex.Message);
             }
-            return Ok();
+
+            return Ok($"Item with Id: {id} deleted successfully");
         }
     }
 }
