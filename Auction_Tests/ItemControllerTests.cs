@@ -2,6 +2,8 @@
 using DAL.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -25,6 +27,7 @@ namespace Auction_Tests
         JsonSerializerSettings _serializerSettings;
         private const string RequestUri = "api/item/";
         private string _token;
+        string _jsonPublicItemInfo;
 
         [SetUp]
         public async Task Setup()
@@ -33,11 +36,12 @@ namespace Auction_Tests
             _client = _factory.CreateClient();
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-            
-            if (_serializerSettings == null)
+
+            if (_serializerSettings == null || _jsonPublicItemInfo == null)
             {
                 //arrange
                 _serializerSettings = TestHelper.GetSerializerSettings();
+                _jsonPublicItemInfo = GetItemPublicInfoJsonData(publicItemInfo, _serializerSettings);
             }
         }
 
@@ -52,7 +56,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
         }
 
         [Test]
@@ -64,7 +68,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
         }
 
         [Test]
@@ -89,7 +93,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
         }
 
         [Test]
@@ -117,7 +121,7 @@ namespace Auction_Tests
             // assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(jsonDataGetPublicSortedByStartDate);
+            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
         }
 
         [Test]
@@ -180,16 +184,29 @@ namespace Auction_Tests
         }
 
         [Test]
+        public async Task GetById_ReturnsBadRequest()
+        {
+            //arrange
+            var ID = "abc";
+
+            // act
+            var httpResponse = await _client.GetAsync(RequestUri + $"{ID}");
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Test]
         public async Task Add_AddsNewItem()
         {
             // act
             HttpResponseMessage httpResponse;
 
-            using (var fileStream = File.OpenRead(@"TestPhotos\test.jpg"))
+            using (var fileStream = File.OpenRead(@"StaticFiles\TestPhotos\test.jpg"))
             using (var content = new StreamContent(fileStream))
             using (var formData = new MultipartFormDataContent())
             {
-                // Add file (file, field name, file name)
+                //create ItemCreateNewEntity data
                 formData.Add(new StringContent("TestItem3"), "Name");
                 formData.Add(new StringContent("Test Author3"), "CreatedBy");
                 formData.Add(new StringContent("20"), "StartingPrice");
@@ -205,68 +222,161 @@ namespace Auction_Tests
             httpResponse.EnsureSuccessStatusCode();
             responseJson.Should().Contain("TestItem3");
 
+            // these 2 lines delete the created image
+            var staticFileName = TestHelper.GetStringFromStartToEnd(responseJson, "veiling_", "jpg");
+            File.Delete(TestHelper.GetDirectory() + @"\StaticFiles\images\" + staticFileName);
+
             httpResponse.Dispose();
         }
 
+        [Test]
+        public async Task UpdateBid_ReturnsSuccessCode()
+        {
+            //arrange
+            var newBid = new ItemUpdateBid
+            {
+                BuyerId = TestHelper.users[1].Id,
+                CurrentBid = 75
+            };
+            var newBidDataJson = JsonConvert.SerializeObject(newBid, _serializerSettings);
+            var stringContent = new StringContent(newBidDataJson, Encoding.UTF8, "application/json");
+            var itemID = "1";
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + itemID, stringContent);
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            var response = JsonConvert.DeserializeObject<Item>(responseJson);
+
+            Assert.AreEqual(newBid.CurrentBid, response.CurrentBid);
+            Assert.AreEqual(newBid.BuyerId, response.BuyerId);
+        }
+
+        [Test]
+        public async Task Update_ReturnsSuccessCode()
+        {
+            //arrange
+            var inputData = new ItemPublicInfo
+            {
+                Id = TestHelper.items[1].Id,
+                Name = "NewTestName",
+                CreatedBy = "NewTestAuthor",
+                OwnerId = TestHelper.items[0].OwnerId,
+                StartingPrice = 10,
+                CurrentBid = 80,
+                StartSaleDate = new DateTime(2023, 01, 09, 10, 00, 00),
+                EndSaleDate = new DateTime(2023, 02, 09, 10, 00, 00),
+                Status = new Status { Id = TestHelper.items[0].Status.Id, Name = TestHelper.items[0].Status.Name },
+                BuyerId = TestHelper.items[0].BuyerId,
+                Description = TestHelper.items[0].Description,
+                ItemPhotos = TestHelper.itemPhotos
+            };
+            var newItemDataJson = JsonConvert.SerializeObject(inputData, _serializerSettings);
+            var stringContent = new StringContent(newItemDataJson, Encoding.UTF8, "application/json");
+            var itemID = TestHelper.items[1].Id;
+
+            // act
+            var httpResponse = await _client.PutAsync(RequestUri + itemID + "/edit", stringContent);
+
+            // assert
+            httpResponse.EnsureSuccessStatusCode();
+            string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            var response = JsonConvert.DeserializeObject<Item>(responseJson);
+
+            response.Should().BeEquivalentTo(inputData);
+        }
+
+        [Test]
+        public async Task Delete_AvailableToAdmin()
+        {
+            //arrange
+            _token = await TestHelper.GenerateToken(_client, "admin");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+
+            // act
+            var getItem_BeforeDelete = await _client.GetAsync(RequestUri + "1");
+            var httpResponse = await _client.DeleteAsync(RequestUri + "1");
+            var getItem_AfterDelete = await _client.GetAsync(RequestUri + "1");
+
+            // assert
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            getItem_BeforeDelete.EnsureSuccessStatusCode();
+            getItem_AfterDelete.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+
         #region TestData
-        readonly string jsonDataGetPublicSortedByStartDate = "[{\"$id\":\"1\",\"id\":1,\"name\":\"TestItem1\",\"createdBy\":\"Test Author\"," +
-            "\"ownerId\":1,\"buyerId\":2,\"description\":null,\"startingPrice\":60.0,\"currentBid\":70.0,\"startSaleDate\":\"2022-07-09T10:00:00\"," +
-            "\"endSaleDate\":\"2022-08-10T12:00:00\",\"itemCategories\":[{\"$id\":\"2\",\"itemId\":1,\"item\":null,\"categoryId\":1," +
-            "\"category\":{\"$id\":\"3\",\"name\":\"Category1\",\"itemCategories\":null,\"id\":1},\"id\":1}],\"itemPhotos\":null," +
-            "\"status\":\"test_Status2\"},{\"$id\":\"4\",\"id\":2,\"name\":\"TestItem2\",\"createdBy\":\"Test Author2\",\"ownerId\":1," +
-            "\"buyerId\":2,\"description\":null,\"startingPrice\":60.0,\"currentBid\":70.0,\"startSaleDate\":\"2022-10-09T10:00:00\"," +
-            "\"endSaleDate\":\"2022-12-10T12:00:00\",\"itemCategories\":[{\"$id\":\"5\",\"itemId\":2,\"item\":null,\"categoryId\":2," +
-            "\"category\":{\"$id\":\"6\",\"name\":\"Category2\",\"itemCategories\":null,\"id\":2},\"id\":2}],\"itemPhotos\":null,\"status\":\"test_Status1\"}]";
+        string GetItemPublicInfoJsonData(List<ItemPublicInfo> items, JsonSerializerSettings serializerSettings)
+            => JsonConvert.SerializeObject(items, serializerSettings);
 
-        string GetItemPublicInfoJsonData(JsonSerializerSettings serializerSettings)
-            => JsonConvert.SerializeObject(GetPublicSortedByStartDate(TestHelper.items), serializerSettings);
-
-        List<ItemPublicInfo> GetPublicSortedByStartDate(List<Item> items) => new List<ItemPublicInfo>() {
+        //List with nulled navigation properties maked in an immutable way.
+        //This will not change the original list in the TestHepler class
+        static List<ItemPublicInfo> publicItemInfo = new List<ItemPublicInfo>() {
             new ItemPublicInfo{
-                Id = items[0].Id,
-                Name = items[0].Name,
-                CreatedBy = items[0].CreatedBy,
-                OwnerId = items[0].OwnerId,
-                BuyerId = items[0].BuyerId,
-                Description = items[0].Description,
-                StartingPrice = items[0].StartingPrice,
-                CurrentBid = items[0].CurrentBid,
-                StartSaleDate = items[0].StartSaleDate,
-                EndSaleDate = items[0].EndSaleDate,
-                ItemPhotos = items[0].ItemPhotos,
-                Status = items[0].Status.Name,
-                ItemCategories = items[0].ItemCategories
-                                .Select(ic =>
-                                {
-                                    ic.Item = null;
-                                    ic.Category.ItemCategories = null;
-                                    return ic;
-                                })
-                                .ToList()
+                Id = TestHelper.items[0].Id,
+                Name = TestHelper.items[0].Name,
+                CreatedBy = TestHelper.items[0].CreatedBy,
+                OwnerId = TestHelper.items[0].OwnerId,
+                BuyerId = TestHelper.items[0].BuyerId,
+                Description = TestHelper.items[0].Description,
+                StartingPrice = TestHelper.items[0].StartingPrice,
+                CurrentBid = TestHelper.items[0].CurrentBid,
+                StartSaleDate = TestHelper.items[0].StartSaleDate,
+                EndSaleDate = TestHelper.items[0].EndSaleDate,
+                ItemPhotos = TestHelper.items[0].ItemPhotos,
+                Status = new Status()
+                {
+                    Id = TestHelper.items[0].Status.Id,
+                    Name = TestHelper.items[0].Status.Name
+                },
+                ItemCategories =  TestHelper.items[0].ItemCategories
+                    .Select(ic => new ItemCategory
+                    {
+                        Id = ic.Id,
+                        CategoryId = ic.CategoryId,
+                        ItemId = ic.ItemId,
+                        Category = new Category
+                        {
+                            Id = ic.Id,
+                            Name = ic.Category.Name
+                        }
+                    })
+                    .ToList()
             },
             new ItemPublicInfo{
-                Id = items[1].Id,
-                Name = items[1].Name,
-                CreatedBy = items[1].CreatedBy,
-                OwnerId = items[1].OwnerId,
-                BuyerId = items[1].BuyerId,
-                Description = items[1].Description,
-                StartingPrice = items[1].StartingPrice,
-                CurrentBid = items[1].CurrentBid,
-                StartSaleDate = items[1].StartSaleDate,
-                EndSaleDate = items[1].EndSaleDate,
-                ItemPhotos = items[1].ItemPhotos,
-                Status = items[1].Status.Name,
-                ItemCategories = items[1].ItemCategories
-                                .Select(ic =>
-                                {
-                                    ic.Item = null;
-                                    ic.Category.ItemCategories = null;
-                                    return ic;
-                                })
-                                .ToList()
+                Id = TestHelper.items[1].Id,
+                Name = TestHelper.items[1].Name,
+                CreatedBy = TestHelper.items[1].CreatedBy,
+                OwnerId = TestHelper.items[1].OwnerId,
+                BuyerId = TestHelper.items[1].BuyerId,
+                Description = TestHelper.items[1].Description,
+                StartingPrice = TestHelper.items[1].StartingPrice,
+                CurrentBid = TestHelper.items[1].CurrentBid,
+                StartSaleDate = TestHelper.items[1].StartSaleDate,
+                EndSaleDate = TestHelper.items[1].EndSaleDate,
+                ItemPhotos = TestHelper.items[1].ItemPhotos,
+                Status = new Status()
+                {
+                    Id = TestHelper.items[1].Status.Id,
+                    Name = TestHelper.items[1].Status.Name
+                },
+                ItemCategories =  TestHelper.items[1].ItemCategories
+                    .Select(ic => new ItemCategory
+                    {
+                        Id = ic.Id,
+                        CategoryId = ic.CategoryId,
+                        ItemId = ic.ItemId,
+                        Category = new Category
+                        {
+                            Id = ic.Id,
+                            Name = ic.Category.Name
+                        }
+                    })
+                    .ToList()
             }
-        };
+            };
 
         #endregion
     }
