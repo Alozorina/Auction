@@ -1,4 +1,5 @@
-﻿using DAL.Data;
+﻿using BLL;
+using DAL.Data;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -40,10 +41,12 @@ namespace DAL.Repositories
             {
                 var exist = await dbSet.FirstOrDefaultAsync(x => x.Id == id);
 
-                if (exist != null)
-                    dbSet.Remove(exist);
+                if (exist == null)
+                    throw new AuctionException("Wrong Id");
+
+                dbSet.Remove(exist);
             }
-            catch (Exception ex)
+            catch (AuctionException ex)
             {
                 _logger.LogError(ex, "{Repo} DeleteByIdAsync function error", typeof(GenericRepository<TEntity>));
             }
@@ -75,6 +78,12 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets all elements in database
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result returns <IEnumerable<Entity>>, or empty List<Entity> if an error occurred
+        /// </returns>
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
             try
@@ -88,6 +97,15 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets info about entity without details
+        /// </summary>
+        /// <remarks> 
+        /// Navigation properties will be null
+        /// </remarks>
+        /// <returns>
+        /// Async Task. Task result contains the single element corresponding to the incoming ID, or null if an error occurred
+        /// </returns>
         public async Task<TEntity> GetByIdAsync(int id)
         {
             try
