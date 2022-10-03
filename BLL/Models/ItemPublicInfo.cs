@@ -30,6 +30,6 @@ namespace BLL.Models
         public ICollection<ItemCategory> ItemCategories { get; set; }
         public virtual ICollection<ItemPhoto> ItemPhotos { get; set; }
         [Required]
-        public string Status { get; set; }
+        public Status Status { get; set; }
     }
 }

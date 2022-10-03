@@ -21,13 +21,14 @@ namespace BLL
                 .ForMember(u => u.Password, opt => opt
                     .MapFrom(up => up.NewPassword));
 
-            CreateMap<Item, ItemPublicInfo>()
-                .ForMember(ipi => ipi.Status, opt => opt
-                    .MapFrom(i => i.Status.Name));
+            CreateMap<Item, ItemPublicInfo>();
+            CreateMap<ItemPublicInfo, Item>()
+                .ForMember(i => i.StatusId, opt => opt
+                    .MapFrom(ipi => ipi.Status.Id));
 
             CreateMap<ItemCreateNewEntity, Item>();
 
-            CreateMap<Item, ItemUpdateBid>().ReverseMap();
+            CreateMap<Item, ItemUpdateBid>();
         }
     }
 }
