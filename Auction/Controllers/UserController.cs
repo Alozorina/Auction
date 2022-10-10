@@ -1,0 +1,255 @@
+﻿using Auction.Middleware;
+using AutoMapper;
+using BLL;
+using BLL.Extensions;
+using BLL.Models;
+using BLL.Validation;
+using DAL.Entities;
+using DAL.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Auction.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UserController : ControllerBase
+    {
+        private readonly IMapper _mapper;
+        private readonly ILogger _logger;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ITokenManager _tokenManager;
+
+        public UserController(ILogger<UserController> logger, IMapper mapper, IUnitOfWork unitOfWork, ITokenManager tokenManager)
+        {
+            _mapper = mapper;
+            _logger = logger;
+            _unitOfWork = unitOfWork;
+            _tokenManager = tokenManager;
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<UserPulicInfo>>> Get()
+        {
+            var users = await _unitOfWork.UserRepository.GetAllWithDetailsAsync();
+            List<UserPulicInfo> usersPulicInfo = new List<UserPulicInfo>();
+            foreach (var user in users)
+            {
+                usersPulicInfo.Add(_mapper.Map<UserPulicInfo>(user));
+            }
+            _logger.Log(LogLevel.Debug, $"Returned {usersPulicInfo.Count} accounts from database.");
+            return Ok(usersPulicInfo);
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin")]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<User>> GetById(int id)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdWithDetailsAsync(id);
+
+            if (user == null)
+            {
+                _logger.Log(LogLevel.Error, $"Account with id: {id}, hasn't been found in db.");
+                return NotFound($"Account with id: {id}, hasn't been found in db.");
+            }
+
+            return Ok(user);
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("profile")]
+        public async Task<ActionResult<UserPersonalInfoModel>> GetCurrentUserPersonalInfo()
+        {
+            var currentUser = await GetUser();
+            if (currentUser == null)
+            {
+                _logger.Log(LogLevel.Error, "Authorization access error");
+                return NotFound("Authorization access error");
+            }
+
+            var personalInfo = _mapper.Map<User, UserPersonalInfoModel>(currentUser);
+            return Ok(personalInfo);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<ActionResult> Register([FromBody] UserRegistrationModel value)
+        {
+            if (ModelState.IsValid && !_tokenManager.IsCurrentActive())
+            {
+                User user;
+                const int USER_ROLE_ID = 1;
+                Role role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == USER_ROLE_ID);
+                try
+                {
+                    user = _mapper.Map<User>(value);
+                    user.RoleId = USER_ROLE_ID;
+                    user.Role = role;
+                    await _unitOfWork.UserRepository.AddAsync(user);
+                    await _unitOfWork.SaveAsync();
+                }
+                catch (AuctionException ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+                return Ok(_tokenManager.GetStringToken(user));
+            }
+            return BadRequest();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(UserLoginModel _userLoginData)
+        {
+            if (_userLoginData != null && _userLoginData.Email != null && _userLoginData.Password != null)
+            {
+                var userExists = await _unitOfWork.UserRepository.Login(_userLoginData.Email, _userLoginData.Password);
+
+                if (userExists == null)
+                    return Unauthorized("Invalid credentials");
+
+                return Ok(_tokenManager.GetStringToken(userExists));
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin, User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            _tokenManager.InvalidateCurrentToken();
+            HttpContext.User = null;
+            return Ok();
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin, User")]
+        [HttpPut("profile/edit")]
+        public async Task<ActionResult> UpdateCurrentUserPersonalInfo([FromBody] UserPersonalInfoModel updateModel)
+        {
+            var currentUser = await GetUser();
+            try
+            {
+                var update = _mapper.Map(updateModel, currentUser);
+                update.BirthDate = DataConverter.ConvertDateFromClient(updateModel.BirthDate);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return CreatedAtAction(nameof(GetCurrentUserPersonalInfo), updateModel);
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin, User")]
+        [HttpPut("profile/password")]
+        public async Task<ActionResult> UpdatePassword([FromBody] UserPassword updateModel)
+        {
+            var currentUser = await GetUser();
+            try
+            {
+                _unitOfWork.UserRepository.UpdatePassword(currentUser, updateModel);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok("Updated successfully");
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/edit")]
+        public async Task<ActionResult> UpdatePersonalInfoById(int id, [FromBody] UserPersonalInfoModel updateModel)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            try
+            {
+                _mapper.Map(updateModel, user);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return CreatedAtAction(nameof(GetById), new { id }, updateModel);
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/creds")]
+        public async Task<ActionResult> UpdatePasswordById(int id, [FromBody] UserPassword updateModel)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            try
+            {
+                _unitOfWork.UserRepository.UpdatePassword(user, updateModel);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok("Updated successfully");
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/role")]
+        public async Task<ActionResult> UpdateRoleById(int id, [FromBody] int roleId)
+        {
+            try
+            {
+                Role role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == roleId);
+                await _unitOfWork.UserRepository.UpdateRole(id, role);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok("Updated successfully");
+        }
+
+        [ValidateToken]
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            try
+            {
+                await _unitOfWork.UserRepository.DeleteByIdAsync(id);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (AuctionException ex)
+            {
+                return NotFound(ex.Message);
+            }
+
+            return Ok($"User with Id: {id} deleted successfully");
+        }
+
+        private async Task<User> GetUser()
+        {
+            return await _unitOfWork.UserRepository
+                .GetByIdAsync(
+                    Convert.ToInt32(
+                        HttpContext.User.FindFirst("Id").Value));
+        }
+    }
+}
