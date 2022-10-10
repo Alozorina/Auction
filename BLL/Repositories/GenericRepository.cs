@@ -23,6 +23,12 @@ namespace DAL.Repositories
             _logger = logger;
         }
 
+        /// <summary>
+        /// Adds an entity to the database if an entity with this Id does not already exist
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous EF Core Add operation
+        /// </returns>
         public virtual async Task AddAsync(TEntity entity)
         {
             try
@@ -35,7 +41,13 @@ namespace DAL.Repositories
             }
         }
 
-        public async Task DeleteByIdAsync(int id)
+        /// <summary>
+        /// Removes an entity from the database if that entity Id exists in the database
+        /// </summary>
+        /// <returns>
+        /// Remove operation from EF Core for the entity with given Id 
+        /// </returns>
+        public virtual async Task DeleteByIdAsync(int id)
         {
             try
             {
@@ -52,6 +64,13 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Returns list of a sequence that satisfies a predicate or null
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result returns the list of the sequence 
+        /// that satisfies the condition in predicate, or null if no such element is found
+        /// </returns>
         public async Task<IEnumerable<TEntity>> FindByPredicateAsync(Expression<Func<TEntity, bool>> predicate)
         {
             try
@@ -65,11 +84,18 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Returns the only element of a sequence that satisfies a predicate or null
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result returns the single element of the input sequence 
+        /// that satisfies the condition in predicate, or null if no such element is found
+        /// </returns>
         public virtual async Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
             try
             {
-                return await dbSet.SingleOrDefaultAsync(predicate);
+                return await dbSet.FirstOrDefaultAsync(predicate);
             }
             catch (Exception ex)
             {
