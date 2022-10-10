@@ -9,7 +9,7 @@ namespace DAL.Entities
     {
         [Required, StringLength(50, MinimumLength = 3)]
         public string Name { get; set; }
-        [Required, StringLength(80, MinimumLength = 5)]
+        [Required, StringLength(80, MinimumLength = 3)]
         public string CreatedBy { get; set; }
         [MaxLength(1000)]
         public string Description { get; set; }
