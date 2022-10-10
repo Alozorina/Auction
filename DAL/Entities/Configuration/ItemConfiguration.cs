@@ -126,7 +126,7 @@ namespace DAL.Entities.Configuration
                      StartingPrice = 60m,
                      StatusId = 2,
                      OwnerId = 11,
-                     StartSaleDate = new DateTime(2022, 08, 09, 11, 00, 00),
+                     StartSaleDate = new DateTime(2023, 08, 09, 11, 00, 00),
                      EndSaleDate = new DateTime(2023, 08, 19, 12, 00, 00),
                  }
                 );
