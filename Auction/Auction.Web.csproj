@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BLL\BLL.csproj" />
-    <ProjectReference Include="..\DAL\DAL.csproj" />
+    <ProjectReference Include="..\BLL\Auction.Business.csproj" />
+    <ProjectReference Include="..\DAL\Auction.Data.csproj" />
   </ItemGroup>
 
 

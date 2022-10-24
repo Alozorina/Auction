@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Auction\Auction.csproj" />
+    <ProjectReference Include="..\Auction\Auction.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +37,10 @@
 		<None Include="images\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="StaticFiles\images\" />
 	</ItemGroup>
 
 

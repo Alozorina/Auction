@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HashHandler = BCrypt.Net.BCrypt;
 
@@ -197,21 +196,23 @@ namespace Auction_Tests
 
         public static async Task<string> GenerateToken(HttpClient client, string role)
         {
-            UserLoginModel loginModel = role.ToLower() == "admin"
-                ? new UserLoginModel
-                {
-                    Email = users[1].Email,
-                    Password = "test_password2"
-                }
-                : new UserLoginModel
-                {
-                    Email = users[0].Email,
-                    Password = "test_password1"
-                };
+            var adminModel = new UserLoginModel
+            {
+                Email = users[1].Email,
+                Password = "test_password2"
+            };
+            var userModel = new UserLoginModel
+            {
+                Email = users[0].Email,
+                Password = "test_password1"
+            };
+            var loginModel = role.Equals("admin", StringComparison.OrdinalIgnoreCase)
+                ? adminModel
+                : userModel;
 
-            var serializedLoginAdmin = JsonConvert.SerializeObject(loginModel);
+            var serializedLogin = JsonConvert.SerializeObject(loginModel);
 
-            var stringContent = new StringContent(serializedLoginAdmin, Encoding.UTF8, "application/json");
+            var stringContent = new StringContent(serializedLogin, Encoding.UTF8, "application/json");
             var httpResponse = await client.PostAsync("api/user/login", stringContent);
 
             return await httpResponse.Content.ReadAsStringAsync();
@@ -224,16 +225,14 @@ namespace Auction_Tests
             return fullDir[0..endIndex];
         }
 
-        public static string GetStringFromStartToEnd(string strSource, string strStart, string strEnd)
+        public static string GetStringFromStartToEndInclusive(string sourceString, string startEntry, string endEntry)
         {
-            if (strSource.Contains(strStart) && strSource.Contains(strEnd))
-            {
-                int start, end;
-                start = strSource.IndexOf(strStart, 0);
-                end = strSource.IndexOf(strEnd, start) + strEnd.Length;
-                return strSource[start..end];
-            }
-            return "";
+            if (!sourceString.Contains(startEntry) && !sourceString.Contains(endEntry))
+                return null;
+
+            int startEntryIndex = sourceString.IndexOf(startEntry);
+            int endEntryIndex = sourceString.LastIndexOf(endEntry) + endEntry.Length;
+            return sourceString[startEntryIndex..endEntryIndex];
         }
 
     }

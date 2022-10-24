@@ -1,13 +1,9 @@
 using BLL.Models;
 using DAL.Entities;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -42,13 +38,13 @@ namespace Auction_Tests
         [Test]
         public async Task Get_ReturnsAllUserPulicInfo_AdminAccess()
         {
-            //arrange
+            // Arrange
             var expected = expectedResultOfGetMethod;
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri);
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             var stringResponse = await httpResponse.Content.ReadAsStringAsync();
             var actual = JsonConvert.DeserializeObject<IEnumerable<UserPulicInfo>>(stringResponse).ToList();
@@ -61,26 +57,26 @@ namespace Auction_Tests
         [Test]
         public async Task Get_ReturnsUnauthorized()
         {
-            //arrange
+            // Arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri);
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
         [Test]
         public async Task GetById_ReturnsUserWithDetails()
         {
-            //arrange
+            // Arrange
             var expected = TestHelper.users[0];
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "1");
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             var stringResponse = await httpResponse.Content.ReadAsStringAsync();
             var actualUser = JsonConvert.DeserializeObject<User>(stringResponse);
@@ -95,13 +91,13 @@ namespace Auction_Tests
         [Test]
         public async Task GetCurrentUserPersonalInfo_ReturnsCorrectData()
         {
-            //arrange
+            // Arrange
             string expectedJson = JsonConvert.SerializeObject(userPersonalInfo[1], _serializerSettings);
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "profile");
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             responseJson.Should().BeEquivalentTo(expectedJson);
@@ -110,15 +106,15 @@ namespace Auction_Tests
         [Test]
         public async Task Register_ReturnsNewToken()
         {
-            //arrange
+            // Arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userRegistrationModel[0]);
             var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PostAsync(RequestUri + "register", stringContent);
 
-            // assert
+            // Assert
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             httpResponse.EnsureSuccessStatusCode();
             responseJson.Should().NotBeNull();
@@ -127,15 +123,15 @@ namespace Auction_Tests
         [Test]
         public async Task Register_ReturnsBadRequestIfEmailExists()
         {
-            //arrange
+            // Arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userRegistrationModel[1]);
             var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PostAsync(RequestUri + "register", stringContent);
 
-            // assert
+            // Assert
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             responseJson.Should().BeEquivalentTo("This email is being used by another user");
             httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -144,15 +140,15 @@ namespace Auction_Tests
         [Test]
         public async Task Login_ReturnsNewToken()
         {
-            //arrange
+            // Arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userLoginModel[0]);
             var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
 
-            // assert
+            // Assert
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             httpResponse.EnsureSuccessStatusCode();
             responseJson.Should().NotBeNull();
@@ -161,15 +157,15 @@ namespace Auction_Tests
         [Test]
         public async Task Login_ReturnsUnauthorizedForInvalidCredentials()
         {
-            //arrange
+            // Arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             var expectedJson = JsonConvert.SerializeObject(userLoginModel[1]);
             var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PostAsync(RequestUri + "login", stringContent);
 
-            // assert
+            // Assert
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             responseJson.Should().BeEquivalentTo("Invalid credentials");
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -178,33 +174,33 @@ namespace Auction_Tests
         [Test]
         public async Task Logout_InvalidatesAccessToken()
         {
-            //arrange
+            // Arrange
             var httpPrivateInfo_WithToken = await _client.GetAsync(RequestUri + "profile");
             var stringContent = new StringContent("", Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             await _client.PostAsync(RequestUri + "logout", stringContent);
             var httpPrivatInfo_WithoutToken = await _client.GetAsync(RequestUri + "profile");
 
-            // assert
+            // Assert
             httpPrivateInfo_WithToken.EnsureSuccessStatusCode();
             httpPrivatInfo_WithoutToken.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
-            //tear down
+            // Tear down
             _token = await TestHelper.GenerateToken(_client, "admin");
         }
 
         [Test]
         public async Task UpdateCurrentUserPersonalInfo_ReturnsUpdatedUserModel()
         {
-            //arrange
+            // Arrange
             var expectedJson = JsonConvert.SerializeObject(userPersonalInfo[0], _serializerSettings);
             var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "profile/edit", stringContent);
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             responseJson.Should().BeEquivalentTo(expectedJson);
@@ -213,61 +209,61 @@ namespace Auction_Tests
         [Test]
         public async Task UpdatePassword_ThrowsExceptionIfOldPasswordDoesntMatch()
         {
-            //arrange
+            // Arrange
             var incorrectOldPasswordJson = JsonConvert.SerializeObject(userPasswordModel[0]);
             var stringContent = new StringContent(incorrectOldPasswordJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "profile/password", stringContent);
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Test]
         public async Task UpdatePassword_ReturnsSuccessCode()
         {
-            //arrange
+            // Arrange
             var correctOldPasswordJson = JsonConvert.SerializeObject(userPasswordModel[1]);
             var stringContent = new StringContent(correctOldPasswordJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "profile/password", stringContent);
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
         [Test]
         public async Task UpdatePersonalInfoById_ReturnsForbiddenIfNotAdmin()
         {
-            //arrange
+            // Arrange
             _token = await TestHelper.GenerateToken(_client, "user");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
             var newUserDataJson = JsonConvert.SerializeObject(userPersonalInfo[1], _serializerSettings);
             var stringContent = new StringContent(newUserDataJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "1/edit", stringContent);
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         [Test]
         public async Task UpdatePersonalInfoById_AvailableToAdmin()
         {
-            //arrange
+            // Arrange
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
             var newUserDataJson = JsonConvert.SerializeObject(userPersonalInfo[1], _serializerSettings);
             var stringContent = new StringContent(newUserDataJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "1/edit", stringContent);
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             responseJson.Should().BeEquivalentTo(newUserDataJson);
@@ -276,41 +272,41 @@ namespace Auction_Tests
         [Test]
         public async Task UpdatePasswordById_ReturnsForbiddenIfNotAdmin()
         {
-            //arrange
+            // Arrange
             _token = await TestHelper.GenerateToken(_client, "user");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
             var newPasswordJson = JsonConvert.SerializeObject(userPasswordModel[1], _serializerSettings);
             var stringContent = new StringContent(newPasswordJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "1/creds", stringContent);
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         [Test]
         public async Task UpdatePasswordById_AvailableToAdmin()
         {
-            //arrange
+            // Arrange
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
             var newPasswordJson = JsonConvert.SerializeObject(userPasswordModel[1], _serializerSettings);
             var stringContent = new StringContent(newPasswordJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "2/creds", stringContent);
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
         [Test]
         public async Task UpdateRoleById_AvailableToAdmin()
         {
-            //arrange
+            // Arrange
             const int RoleId = 2;
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
@@ -318,26 +314,26 @@ namespace Auction_Tests
             var newPasswordJson = JsonConvert.SerializeObject(RoleId);
             var stringContent = new StringContent(newPasswordJson, Encoding.UTF8, "application/json");
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + "1/role", stringContent);
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
         [Test]
         public async Task Delete_AvailableToAdmin()
         {
-            //arrange
+            // Arrange
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
-            // act
+            // Act
             var getUser_BeforeDelete = await _client.GetAsync(RequestUri + "1");
             var httpResponse = await _client.DeleteAsync(RequestUri + "1");
             var getUser_AfterDelete = await _client.GetAsync(RequestUri + "1");
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             getUser_BeforeDelete.EnsureSuccessStatusCode();
             getUser_AfterDelete.StatusCode.Should().Be(HttpStatusCode.NotFound);
