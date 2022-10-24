@@ -145,6 +145,9 @@ namespace Auction.Controllers
         {
             List<string> imageExtensions = new List<string> { ".JPG", ".JPEG", ".JPE", ".PNG" };
             string path = Path.Combine(_webHostEnvironment.ContentRootPath, "StaticFiles", "images");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
             List<string> uploadedFileNames = new List<string>();
             foreach (var file in files)
             {
