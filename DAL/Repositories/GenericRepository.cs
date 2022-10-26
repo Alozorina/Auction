@@ -1,5 +1,4 @@
-﻿using BLL;
-using DAL.Data;
+﻿using DAL.Data;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -47,18 +46,13 @@ namespace DAL.Repositories
         /// <returns>
         /// Remove operation from EF Core for the entity with given Id 
         /// </returns>
-        public virtual async Task DeleteByIdAsync(int id)
+        public virtual void Delete(TEntity entity)
         {
             try
             {
-                var exist = await dbSet.FirstOrDefaultAsync(x => x.Id == id);
-
-                if (exist == null)
-                    throw new AuctionException("Wrong Id");
-
-                dbSet.Remove(exist);
+                dbSet.Remove(entity);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} DeleteByIdAsync function error", typeof(GenericRepository<TEntity>));
             }
@@ -71,11 +65,11 @@ namespace DAL.Repositories
         /// Async Task. Task result returns the list of the sequence 
         /// that satisfies the condition in predicate, or null if no such element is found
         /// </returns>
-        public async Task<IEnumerable<TEntity>> FindByPredicateAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<List<TEntity>> FindByPredicateAsync(Expression<Func<TEntity, bool>> predicate)
         {
             try
             {
-                return await dbSet.Where(predicate).ToListAsync();
+                return await GetAll().Where(predicate).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -108,18 +102,18 @@ namespace DAL.Repositories
         /// Gets all elements in database
         /// </summary>
         /// <returns>
-        /// Async Task. Task result returns <IEnumerable<Entity>>, or empty List<Entity> if an error occurred
+        /// Async Task. Task result returns <IQueryable<Entity>>, or empty List<Entity> if an error occurred
         /// </returns>
-        public async Task<IEnumerable<TEntity>> GetAllAsync()
+        public IQueryable<TEntity> GetAll()
         {
             try
             {
-                return await dbSet.ToListAsync();
+                return dbSet.AsQueryable();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} GetAllAsync function error", typeof(GenericRepository<TEntity>));
-                return new List<TEntity>();
+                return new List<TEntity>().AsQueryable();
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Auction.Data.Interfaces;
+using System;
 using System.Threading.Tasks;
 
 namespace DAL.Interfaces
