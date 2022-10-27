@@ -194,15 +194,15 @@ namespace Auction_Tests
         public async Task UpdateCurrentUserPersonalInfo_ReturnsUpdatedUserModel()
         {
             // Arrange
-            var expectedJson = JsonConvert.SerializeObject(userPersonalInfo[0], _serializerSettings);
+            var expectedJson = JsonConvert.SerializeObject(userPersonalInfo[2], _serializerSettings);
             var stringContent = new StringContent(expectedJson, Encoding.UTF8, "application/json");
 
             // Act
             var httpResponse = await _client.PutAsync(RequestUri + "profile/edit", stringContent);
 
             // Assert
-            httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
+            httpResponse.EnsureSuccessStatusCode();
             responseJson.Should().BeEquivalentTo(expectedJson);
         }
 
@@ -257,7 +257,7 @@ namespace Auction_Tests
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
-            var newUserDataJson = JsonConvert.SerializeObject(userPersonalInfo[1], _serializerSettings);
+            var newUserDataJson = JsonConvert.SerializeObject(userPersonalInfo[2], _serializerSettings);
             var stringContent = new StringContent(newUserDataJson, Encoding.UTF8, "application/json");
 
             // Act
@@ -369,8 +369,15 @@ namespace Auction_Tests
                 LastName = TestHelper.users[1].LastName,
                 BirthDate = "1992-02-22",
                 Email = TestHelper.users[1].Email,
+            },
+            new UserPersonalInfoModel
+            {
+                FirstName = TestHelper.users[0].FirstName,
+                LastName = TestHelper.users[0].LastName,
+                BirthDate = "1981-01-21",
+                Email = "newEmail@f.com",
             }
-        };
+    };
 
         static readonly List<UserRegistrationModel> userRegistrationModel = new List<UserRegistrationModel>() {
             new UserRegistrationModel

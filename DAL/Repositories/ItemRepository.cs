@@ -1,11 +1,9 @@
-﻿using BLL.Models;
-using DAL.Data;
+﻿using DAL.Data;
 using DAL.Entities;
 using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,65 +15,28 @@ namespace DAL.Repositories
         {
         }
         /// <summary>
-        /// Gets all items from the database, maps them to <ItemPublicInfo> and makes the nested navigation properties null
-        /// </summary>
-        /// <returns>
-        /// Async Task. Task result contains <List<ItemPublicInfo>> that contains elements from the input sequence
-        /// </returns>
-        public async Task<List<ItemPublicInfo>> GetAllPublicWithDetailsAsync(AutoMapper.IMapper mapper)
-        {
-            var items = await GetAllWithDetailsAsync();
-            return items
-                .Select(item =>
-                {
-                    var publicItem = mapper.Map<ItemPublicInfo>(item);
-                    publicItem.ItemCategories = publicItem.ItemCategories
-                    .Select(ic => new ItemCategory
-                    {
-                        Id = ic.Id,
-                        CategoryId = ic.CategoryId,
-                        ItemId = ic.ItemId,
-                        Category = new Category
-                        {
-                            Id = ic.Id,
-                            Name = ic.Category.Name
-                        }
-                    })
-                    .ToList();
-                    publicItem.Status = new Status()
-                    {
-                        Id = publicItem.Status.Id,
-                        Name = publicItem.Status.Name
-                    };
-                    return publicItem;
-                })
-                .OrderBy(i => i.StartSaleDate)
-                .ToList();
-        }
-
-        /// <summary>
         /// Gets all items from the database with navigation properties
         /// </summary>
         /// <returns>
-        /// Async Task. Task result contains <List<ItemPublicInfo>> that contains elements from the input sequence
+        /// IQueryable<Item> that contains elements from the input sequence
         /// </returns>
-        public async Task<IEnumerable<Item>> GetAllWithDetailsAsync()
+        public IQueryable<Item> GetAllWithDetails()
         {
             try
             {
-                return await dbSet
-                            .Include(i => i.Owner)
-                            .Include(i => i.Buyer)
-                            .Include(i => i.ItemCategories)
-                                .ThenInclude(ic => ic.Category)
-                            .Include(i => i.Status)
-                            .Include(i => i.ItemPhotos)
-                            .ToListAsync();
+                return dbSet
+                    .Include(i => i.Owner)
+                    .Include(i => i.Buyer)
+                    .Include(i => i.ItemCategories)
+                        .ThenInclude(ic => ic.Category)
+                    .Include(i => i.Status)
+                    .Include(i => i.ItemPhotos)
+                    .AsQueryable();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} GetAllWithDetailsAsync function error", typeof(ItemRepository));
-                return await GetAllAsync();
+                return GetAll();
             }
         }
 
@@ -90,18 +51,42 @@ namespace DAL.Repositories
             try
             {
                 return await dbSet
-                            .Include(i => i.Owner)
-                            .Include(i => i.Buyer)
-                            .Include(i => i.ItemCategories)
-                                .ThenInclude(ic => ic.Category)
-                            .Include(i => i.Status)
-                            .Include(i => i.ItemPhotos)
-                            .SingleOrDefaultAsync(c => c.Id == id);
+                    .Include(i => i.Owner)
+                    .Include(i => i.Buyer)
+                    .Include(i => i.ItemCategories)
+                        .ThenInclude(ic => ic.Category)
+                    .Include(i => i.Status)
+                    .Include(i => i.ItemPhotos)
+                    .SingleOrDefaultAsync(c => c.Id == id);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} GetByIdWithDetailsAsync function error", typeof(ItemRepository));
                 return await GetByIdAsync(id);
+            }
+        }
+
+        /// <summary>
+        /// Gets all items from the database with navigation properties
+        /// </summary>
+        /// <returns>
+        /// IQueryable<Item> that contains elements from the input sequence
+        /// </returns>
+        public IQueryable<Item> GetAllPublicDetails()
+        {
+            try
+            {
+                return dbSet
+                    .Include(i => i.ItemCategories)
+                        .ThenInclude(ic => ic.Category)
+                    .Include(i => i.Status)
+                    .Include(i => i.ItemPhotos)
+                    .AsQueryable();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Repo} GetAllWithDetailsAsync function error", typeof(ItemRepository));
+                return GetAll();
             }
         }
 
@@ -127,25 +112,6 @@ namespace DAL.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} UpdateAsync function error", typeof(ItemRepository));
-            }
-        }
-
-        public bool UpdateBidByIdAsync(Item item, ItemUpdateBid data)
-        {
-            try
-            {
-                if (item != null)
-                {
-                    item.CurrentBid = data.CurrentBid;
-                    item.BuyerId = data.BuyerId;
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{Repo} UpdateBidAsync function error", typeof(ItemRepository));
-                return false;
             }
         }
     }

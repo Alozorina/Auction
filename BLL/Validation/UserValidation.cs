@@ -1,7 +1,7 @@
 ﻿using DAL.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using HashHandler = BCrypt.Net.BCrypt;
 
 namespace BLL.Validation
 {
@@ -11,16 +11,31 @@ namespace BLL.Validation
             => users.Any(u => u.Email == email);
 
         public static bool IsEmailCouldBeUpdated(IEnumerable<User> users, string userEmail, string updateModelEmail)
-            => userEmail != updateModelEmail && IsEmailExists(users, updateModelEmail);
+        {
+            if (userEmail != updateModelEmail && !IsEmailExists(users, updateModelEmail))
+                return true;
 
-        public static bool IsClientPasswordValid(string textPasswordFromClient, string currentHashPasswordInDb)
-            => HashHandler.Verify(textPasswordFromClient, currentHashPasswordInDb);
+            throw new AuctionException("Invalid email");
+        }
+
+        public static void ThrowArgumentExceptionIfUserIsNull(User user)
+        {
+            if (user == null)
+                throw new ArgumentException("Wrong Id");
+        }
 
         public static bool IsModelHasNullProperty(User model)
-            => model == null
+        {
+            var isModelHasNullProperty = model == null
             || model.FirstName == null
             || model.LastName == null
             || model.Email == null
             || model.Password == null;
+
+            if (isModelHasNullProperty)
+                throw new AuctionException("One of the required properties is null");
+
+            return isModelHasNullProperty;
+        }
     }
 }

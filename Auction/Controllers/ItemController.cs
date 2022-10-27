@@ -1,18 +1,13 @@
-﻿using Auction.Middleware;
-using AutoMapper;
-using BLL;
+﻿using Auction.Business.Services;
+using Auction.Middleware;
 using BLL.Models;
 using DAL.Entities;
-using DAL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Auction.Controllers
@@ -22,36 +17,41 @@ namespace Auction.Controllers
     public class ItemController : ControllerBase
     {
         private readonly ILogger _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        private readonly IItemService _itemService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ItemController(ILogger<ItemController> logger, IMapper mapper, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
+        public ItemController(ILogger<ItemController> logger, IItemService itemService, IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
             _webHostEnvironment = webHostEnvironment;
+            _itemService = itemService;
         }
 
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetPublicSortedByStartDate()
         {
-            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
+            var items = await _itemService.GetAllPublicWithDetailsAsync();
             _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
             return Ok(items);
         }
 
+        //TODO rewrite
         [ValidateToken]
         [Authorize(Roles = "Admin, User")]
         [HttpGet("lots/user={id}")]
         public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetLotsByUserId(int id)
         {
-            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
-            var lots = items.Where(i => i.OwnerId == id).OrderBy(i => i.StartSaleDate).ToList();
-            _logger.Log(LogLevel.Debug, $"Returned {lots.Count} lots from database.");
-            return Ok(lots);
+            try
+            {
+                var lots = await _itemService.GetLotsByUserIdAsync(id);
+                _logger.Log(LogLevel.Debug, $"Returned {lots.Count} lots from database.");
+                return Ok(lots);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [ValidateToken]
@@ -59,30 +59,31 @@ namespace Auction.Controllers
         [HttpGet("purchases/user={id}")]
         public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> GetPurchasesByUserId(int id)
         {
-            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
-            var purchases = items.Where(i => i.BuyerId == id).OrderBy(i => i.StartSaleDate).ToList();
-            _logger.Log(LogLevel.Debug, $"Returned {purchases.Count} purchases from database.");
-            return Ok(purchases);
+            try
+            {
+                var purchases = await _itemService.GetPurchasesByUserIdAsync(id);
+                _logger.Log(LogLevel.Debug, $"Returned {purchases.Count} lots from database.");
+                return Ok(purchases);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("search={searchParams}")]
         public async Task<ActionResult<IEnumerable<ItemPublicInfo>>> Search(string searchParams)
         {
-            var items = await _unitOfWork.ItemRepository.GetAllPublicWithDetailsAsync(_mapper);
-            IEnumerable<ItemPublicInfo> foundBySearchParams = new List<ItemPublicInfo>();
-            if (!String.IsNullOrEmpty(searchParams))
+            try
             {
-                foundBySearchParams = items
-                    .Where(i =>
-                       i.Name.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
-                    || i.CreatedBy.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
-                    || i.ItemCategories.Contains(i.ItemCategories
-                                                    .FirstOrDefault(ic => ic.Category.Name
-                                                            .Contains(searchParams, StringComparison.CurrentCultureIgnoreCase))))
-                    .ToList();
+                var items = await _itemService.SearchItemsAsync(searchParams);
+                _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
+                return Ok(items);
             }
-            _logger.Log(LogLevel.Debug, $"Returned {items.Count} items from database.");
-            return Ok(foundBySearchParams);
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [ValidateToken]
@@ -90,8 +91,15 @@ namespace Auction.Controllers
         [HttpGet("private")]
         public async Task<ActionResult<IEnumerable<Item>>> GetAll()
         {
-            var items = await _unitOfWork.ItemRepository.GetAllWithDetailsAsync();
-            return Ok(items);
+            try
+            {
+                var items = await _itemService.GetAllItemsWithDetailsAsync();
+                return Ok(items);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [ValidateToken]
@@ -99,15 +107,16 @@ namespace Auction.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetById(int id)
         {
-            var item = await _unitOfWork.ItemRepository.GetByIdAsync(id);
-
-            if (item == null)
+            try
+            {
+                var item = await _itemService.GetItemByIdAsync(id);
+                return Ok(item);
+            }
+            catch (Exception ex)
             {
                 _logger.Log(LogLevel.Error, $"Item with id: {id}, hasn't been found in db.");
-                return NotFound();
+                return NotFound(ex.Message);
             }
-
-            return Ok(item);
         }
 
         [ValidateToken]
@@ -117,53 +126,14 @@ namespace Auction.Controllers
         {
             try
             {
-                List<string> uploadedFileNames = await UploadImages(value.ItemFormFilePhotos);
-                Item item = _mapper.Map<Item>(value);
-                item.StatusId = 1;
-                item.ItemPhotos = new List<ItemPhoto>();
-                foreach (var uploadedFileName in uploadedFileNames)
-                {
-                    var photo = new ItemPhoto()
-                    {
-                        ItemId = item.Id,
-                        Path = uploadedFileName,
-                    };
-                    item.ItemPhotos.Add(photo);
-                }
-
-                await _unitOfWork.ItemRepository.AddAsync(item);
-                await _unitOfWork.SaveAsync();
+                var contentRootPath = _webHostEnvironment.ContentRootPath;
+                var item = await _itemService.AddItemAsync(contentRootPath, value);
                 return CreatedAtAction(nameof(GetById), new { id = item.Id }, item);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-        }
-
-        async Task<List<string>> UploadImages(List<IFormFile> files)
-        {
-            List<string> imageExtensions = new List<string> { ".JPG", ".JPEG", ".JPE", ".PNG" };
-            string path = Path.Combine(_webHostEnvironment.ContentRootPath, "StaticFiles", "images");
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-
-            List<string> uploadedFileNames = new List<string>();
-            foreach (var file in files)
-            {
-                string extension = file.FileName.Substring(file.FileName.LastIndexOf('.'));
-                if (imageExtensions.Contains(extension.ToUpperInvariant()))
-                {
-                    string uniqueFileName = "veiling_" + Guid.NewGuid().GetHashCode().ToString() + "_" + file.FileName;
-                    uploadedFileNames.Add(uniqueFileName);
-                    string filePath = Path.Combine(path, uniqueFileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                }
-            }
-            return uploadedFileNames;
         }
 
         [ValidateToken]
@@ -171,19 +141,15 @@ namespace Auction.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateBid(int id, [FromBody] ItemUpdateBid data)
         {
-            if (data == null)
-                return BadRequest();
-            var item = await _unitOfWork.ItemRepository.GetByIdAsync(id);
             try
             {
-                _unitOfWork.ItemRepository.UpdateBidByIdAsync(item, data);
-                await _unitOfWork.SaveAsync();
+                var item = await _itemService.UpdateBidByIdAsync(id, data);
+                return CreatedAtAction(nameof(GetById), new { item.Id }, item);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return CreatedAtAction(nameof(GetById), new { item.Id }, item);
         }
 
         [ValidateToken]
@@ -193,18 +159,15 @@ namespace Auction.Controllers
         {
             if (id != value.Id)
                 return BadRequest("Wrong Id");
-
             try
             {
-                var mapped = _mapper.Map<Item>(value);
-                await _unitOfWork.ItemRepository.UpdateAsync(mapped);
-                await _unitOfWork.SaveAsync();
+                var item = await _itemService.UpdateItemAsync(value);
+                return CreatedAtAction(nameof(GetById), new { value.Id }, value);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return CreatedAtAction(nameof(GetById), new { value.Id }, value);
         }
 
         [ValidateToken]
@@ -214,14 +177,12 @@ namespace Auction.Controllers
         {
             try
             {
-                await _unitOfWork.ItemRepository.DeleteByIdAsync(id);
-                await _unitOfWork.SaveAsync();
+                await _itemService.DeleteItemAsync(id);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return NotFound(ex.Message);
             }
-
             return Ok($"Item with Id: {id} deleted successfully");
         }
     }
