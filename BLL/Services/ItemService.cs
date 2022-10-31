@@ -142,19 +142,17 @@ namespace Auction.Business.Services
 
         public async Task<List<ItemPublicInfo>> SearchItemsAsync(string searchParams)
         {
-            if (!string.IsNullOrEmpty(searchParams))
+            if (string.IsNullOrEmpty(searchParams))
                 throw new ArgumentException("Empty search parameter");
 
-            //TODO fix implementation
             return await _unitOfWork.ItemRepository.GetAllPublicDetails()
-            .Where(i =>
-                   i.Name.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
-                || i.CreatedBy.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
-                || i.ItemCategories.Contains(i.ItemCategories
-                                                .FirstOrDefault(ic => ic.Category.Name
-                                                        .Contains(searchParams, StringComparison.CurrentCultureIgnoreCase))))
-            .Select(item => _mapper.Map<ItemPublicInfo>(item))
-            .ToListAsync();
+                    .SelectMany(i => i.ItemCategories, (Item, ItemCategory) => new { Item, ItemCategory })
+                    .Where(ItemAndCategory =>
+                      ItemAndCategory.Item.Name.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
+                    | ItemAndCategory.Item.CreatedBy.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase)
+                    | ItemAndCategory.ItemCategory.Category.Name.Contains(searchParams, StringComparison.CurrentCultureIgnoreCase))
+                    .Select(ItemAndCategory => _mapper.Map<ItemPublicInfo>(ItemAndCategory.Item))
+                    .ToListAsync();
         }
 
         public async Task DeleteItemAsync(int id)

@@ -108,7 +108,8 @@ namespace Auction_Tests
         public async Task Search_ReturnsCorrectResult()
         {
             // Arrange
-            string searchInput = "test";
+            string searchInput = TestHelper.categories[0].Name;
+            var expected = new List<ItemPublicInfo>() { publicItemInfo[0] };
 
             // Act
             var httpResponse = await _client.GetAsync(RequestUri + $"search={searchInput}");
@@ -116,7 +117,10 @@ namespace Auction_Tests
             // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
+            var actual = JsonConvert.DeserializeObject<IEnumerable<Item>>(responseJson).ToList();
+
+            actual.Should().BeEquivalentTo(expected, options => options
+                                                            .Excluding(i => i.ItemPhotos));
         }
 
         [Test]
