@@ -1,16 +1,16 @@
-﻿using BLL.Models;
-using DAL.Entities;
+﻿using DAL.Entities;
+using DAL.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace DAL.Interfaces
+namespace Auction.Data.Interfaces
 {
     public interface IUserRepository : IRepository<User>
     {
         Task<IEnumerable<User>> GetAllWithDetailsAsync();
         Task<User> GetByIdWithDetailsAsync(int id);
-        Task UpdateRole(int userId, Role role);
-        void UpdatePassword(User user, UserPassword userPassword);
-        Task<User> Login(string email, string password);
+        Task<User> GetUserWithRoleAsync(Expression<Func<User, bool>> predicate);
     }
 }

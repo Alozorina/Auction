@@ -1,3 +1,4 @@
+using Auction.Business.Services;
 using Auction.Middleware;
 using AutoMapper;
 using BLL;
@@ -76,6 +77,8 @@ namespace Auction
 
             services.AddMemoryCache();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IItemService, ItemService>();
+            services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenManager, TokenManager>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddAutoMapper(c => c.AddProfile<AutomapperProfile>(), typeof(Startup));

@@ -1,11 +1,7 @@
-﻿using Auction.Middleware;
-using AutoMapper;
-using BLL;
-using BLL.Extensions;
+﻿using Auction.Business.Services;
+using Auction.Middleware;
 using BLL.Models;
-using BLL.Validation;
 using DAL.Entities;
-using DAL.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,16 +16,14 @@ namespace Auction.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IMapper _mapper;
+        private readonly IUserService _userService;
         private readonly ILogger _logger;
-        private readonly IUnitOfWork _unitOfWork;
         private readonly ITokenManager _tokenManager;
 
-        public UserController(ILogger<UserController> logger, IMapper mapper, IUnitOfWork unitOfWork, ITokenManager tokenManager)
+        public UserController(IUserService userService, ILogger<UserController> logger, ITokenManager tokenManager)
         {
-            _mapper = mapper;
+            _userService = userService;
             _logger = logger;
-            _unitOfWork = unitOfWork;
             _tokenManager = tokenManager;
         }
 
@@ -38,14 +32,16 @@ namespace Auction.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserPulicInfo>>> Get()
         {
-            var users = await _unitOfWork.UserRepository.GetAllWithDetailsAsync();
-            List<UserPulicInfo> usersPulicInfo = new List<UserPulicInfo>();
-            foreach (var user in users)
+            try
             {
-                usersPulicInfo.Add(_mapper.Map<UserPulicInfo>(user));
+                var users = await _userService.GetPublicInfoAsync();
+                return users != null ? Ok(users) : NotFound("No users found");
             }
-            _logger.Log(LogLevel.Debug, $"Returned {usersPulicInfo.Count} accounts from database.");
-            return Ok(usersPulicInfo);
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, $"{ex.Message}");
+                return NotFound();
+            }
         }
 
         [ValidateToken]
@@ -53,15 +49,16 @@ namespace Auction.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetById(int id)
         {
-            var user = await _unitOfWork.UserRepository.GetByIdWithDetailsAsync(id);
-
-            if (user == null)
+            try
             {
-                _logger.Log(LogLevel.Error, $"Account with id: {id}, hasn't been found in db.");
-                return NotFound($"Account with id: {id}, hasn't been found in db.");
+                var user = await _userService.GetUserWithDetailsByIdAsync(id);
+                return user != null ? Ok(user) : NotFound($"Account with id: {id}, hasn't been found in db.");
             }
-
-            return Ok(user);
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, $"{ex.Message}");
+                return NotFound();
+            }
         }
 
         [ValidateToken]
@@ -73,11 +70,9 @@ namespace Auction.Controllers
             if (currentUser == null)
             {
                 _logger.Log(LogLevel.Error, "Authorization access error");
-                return NotFound("Authorization access error");
+                return Unauthorized("Authorization access error");
             }
-
-            var personalInfo = _mapper.Map<User, UserPersonalInfoModel>(currentUser);
-            return Ok(personalInfo);
+            return Ok(_userService.MapToUserPersonalInfoFromUser(currentUser));
         }
 
         [AllowAnonymous]
@@ -86,42 +81,34 @@ namespace Auction.Controllers
         {
             if (ModelState.IsValid && !_tokenManager.IsCurrentActive())
             {
-                User user;
-                const int USER_ROLE_ID = 1;
-                Role role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == USER_ROLE_ID);
                 try
                 {
-                    user = _mapper.Map<User>(value);
-                    user.RoleId = USER_ROLE_ID;
-                    user.Role = role;
-                    await _unitOfWork.UserRepository.AddAsync(user);
-                    await _unitOfWork.SaveAsync();
+                    var user = await _userService.AddAsync(value);
+                    return Ok(_tokenManager.GetStringToken(user));
                 }
-                catch (AuctionException ex)
+                catch (Exception ex)
                 {
                     return BadRequest(ex.Message);
                 }
-                return Ok(_tokenManager.GetStringToken(user));
             }
             return BadRequest();
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login(UserLoginModel _userLoginData)
+        public async Task<IActionResult> Login(UserLoginModel userLoginData)
         {
-            if (_userLoginData != null && _userLoginData.Email != null && _userLoginData.Password != null)
+            if (userLoginData == null || string.IsNullOrEmpty(userLoginData.Email) || string.IsNullOrEmpty(userLoginData.Password))
+                return BadRequest();
+
+            try
             {
-                var userExists = await _unitOfWork.UserRepository.Login(_userLoginData.Email, _userLoginData.Password);
-
-                if (userExists == null)
-                    return Unauthorized("Invalid credentials");
-
+                var userExists = await _userService.LoginAsync(userLoginData.Email, userLoginData.Password);
                 return Ok(_tokenManager.GetStringToken(userExists));
             }
-            else
+            catch
             {
-                return BadRequest();
+                return Unauthorized("Invalid credentials");
             }
         }
 
@@ -143,11 +130,9 @@ namespace Auction.Controllers
             var currentUser = await GetUser();
             try
             {
-                var update = _mapper.Map(updateModel, currentUser);
-                update.BirthDate = DataConverter.ConvertDateFromClient(updateModel.BirthDate);
-                await _unitOfWork.SaveAsync();
+                await _userService.UpdatePersonalInfo(currentUser.Id, updateModel);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -162,10 +147,9 @@ namespace Auction.Controllers
             var currentUser = await GetUser();
             try
             {
-                _unitOfWork.UserRepository.UpdatePassword(currentUser, updateModel);
-                await _unitOfWork.SaveAsync();
+                await _userService.UpdatePassword(currentUser, updateModel);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -177,13 +161,11 @@ namespace Auction.Controllers
         [HttpPut("{id}/edit")]
         public async Task<ActionResult> UpdatePersonalInfoById(int id, [FromBody] UserPersonalInfoModel updateModel)
         {
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
             try
             {
-                _mapper.Map(updateModel, user);
-                await _unitOfWork.SaveAsync();
+                await _userService.UpdatePersonalInfo(id, updateModel);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -195,13 +177,12 @@ namespace Auction.Controllers
         [HttpPut("{id}/creds")]
         public async Task<ActionResult> UpdatePasswordById(int id, [FromBody] UserPassword updateModel)
         {
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
             try
             {
-                _unitOfWork.UserRepository.UpdatePassword(user, updateModel);
-                await _unitOfWork.SaveAsync();
+                var user = await _userService.GetUserByIdAsync(id);
+                await _userService.UpdatePassword(user, updateModel);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -215,11 +196,9 @@ namespace Auction.Controllers
         {
             try
             {
-                Role role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == roleId);
-                await _unitOfWork.UserRepository.UpdateRole(id, role);
-                await _unitOfWork.SaveAsync();
+                await _userService.UpdateRoleAsync(id, roleId);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -233,10 +212,9 @@ namespace Auction.Controllers
         {
             try
             {
-                await _unitOfWork.UserRepository.DeleteByIdAsync(id);
-                await _unitOfWork.SaveAsync();
+                await _userService.DeleteByIdAsync(id);
             }
-            catch (AuctionException ex)
+            catch (Exception ex)
             {
                 return NotFound(ex.Message);
             }
@@ -246,10 +224,9 @@ namespace Auction.Controllers
 
         private async Task<User> GetUser()
         {
-            return await _unitOfWork.UserRepository
-                .GetByIdAsync(
-                    Convert.ToInt32(
-                        HttpContext.User.FindFirst("Id").Value));
+            return await _userService
+                .GetUserByIdAsync(
+                    Convert.ToInt32(_tokenManager.GetUserIdFromToken()));
         }
     }
 }

@@ -26,7 +26,7 @@ namespace DAL.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} GetAllWithDetailsAsync function error", typeof(StatusRepository));
-                return await GetAllAsync();
+                return GetAll();
             }
         }
 

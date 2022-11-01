@@ -1,4 +1,5 @@
-﻿using DAL.Interfaces;
+﻿using Auction.Data.Interfaces;
+using DAL.Interfaces;
 using DAL.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;

@@ -21,7 +21,17 @@ namespace BLL
                 .ForMember(u => u.Password, opt => opt
                     .MapFrom(up => up.NewPassword));
 
-            CreateMap<Item, ItemPublicInfo>();
+            CreateMap<Item, ItemPublicInfo>()
+                .AfterMap((s, d) =>
+                {
+                    d.Status.Items = null;
+                    foreach (var ic in d.ItemCategories)
+                    {
+                        ic.Item = null;
+                        ic.Category.ItemCategories = null;
+                    }
+                });
+
             CreateMap<ItemPublicInfo, Item>()
                 .ForMember(i => i.StatusId, opt => opt
                     .MapFrom(ipi => ipi.Status.Id));

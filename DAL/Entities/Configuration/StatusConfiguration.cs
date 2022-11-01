@@ -4,46 +4,51 @@ using System.Collections.Generic;
 
 namespace DAL.Entities.Configuration
 {
+    public enum Statuses
+    {
+        OnApproval = 1,
+        Upcoming,
+        Rejected,
+        Open,
+        Closed
+    }
     public class StatusConfiguration : IEntityTypeConfiguration<Status>
     {
-        public List<Status> Statuses { get; set; }
-
         public void Configure(EntityTypeBuilder<Status> builder)
         {
             builder.HasMany(i => i.Items)
                 .WithOne(item => item.Status);
 
-            Statuses = new List<Status>()
+            builder.HasData(new List<Status>()
             {
                 new Status
                 {
-                    Id = 1,
-                    Name = "On Approval",
+                    Id = (int)Statuses.OnApproval,
+                    Name = Statuses.OnApproval.ToString(),
                 },
                 new Status
                 {
-                    Id = 2,
-                    Name = "Upcoming",
+                    Id = (int)Statuses.Upcoming,
+                    Name = Statuses.Upcoming.ToString(),
                 },
                 new Status
                 {
-                    Id = 3,
-                    Name = "Rejected",
+                    Id = (int)Statuses.Rejected,
+                    Name = Statuses.Rejected.ToString(),
                 },
                 new Status
                 {
-                    Id = 4,
-                    Name = "Open",
+                    Id = (int)Statuses.Open,
+                    Name = Statuses.Open.ToString(),
                 },
                 new Status
                 {
-                    Id = 5,
-                    Name = "Closed",
+                    Id = (int)Statuses.Closed,
+                    Name = Statuses.Closed.ToString(),
                 }
-            };
+            });
 
             builder.Property("Name").IsRequired();
-            builder.HasData(Statuses);
         }
     }
 }

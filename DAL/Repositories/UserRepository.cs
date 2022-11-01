@@ -1,9 +1,6 @@
-﻿using BLL;
-using BLL.Models;
-using BLL.Validation;
+﻿using Auction.Data.Interfaces;
 using DAL.Data;
 using DAL.Entities;
-using DAL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -20,17 +17,13 @@ namespace DAL.Repositories
         {
         }
 
-        public override async Task AddAsync(User user)
-        {
-            var users = await GetAllAsync();
-            if (UserValidation.IsEmailExists(users, user.Email))
-                throw new AuctionException("This email is being used by another user");
-
-            user.Password = HashHandler.HashPassword(user.Password);
-            await dbSet.AddAsync(user);
-        }
-
-        public async override Task<User> FirstOrDefaultAsync(Expression<Func<User, bool>> predicate)
+        /// <summary>
+        /// Gets User from the database with Role navigation property
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains a single <User> that satisfies the predicate
+        /// </returns>
+        public async Task<User> GetUserWithRoleAsync(Expression<Func<User, bool>> predicate)
         {
             try
             {
@@ -45,13 +38,15 @@ namespace DAL.Repositories
             }
         }
 
-        public async Task<User> Login(string email, string password)
-        {
-            var user = await this.FirstOrDefaultAsync(u => u.Email == email);
-            bool isPasswordCorrect = HashHandler.Verify(password, user.Password);
-            return isPasswordCorrect? user : null;
-        }
-
+        /// <summary>
+        /// Gets all users from the database with navigation properties
+        /// </summary>
+        /// <remarks> 
+        /// Uses no tracking behavior
+        /// </remarks>
+        /// <returns>
+        /// Async Task. Task result contains IEnumerable<User> that contains elements from the input sequence
+        /// </returns>
         public async Task<IEnumerable<User>> GetAllWithDetailsAsync()
         {
             try
@@ -60,15 +55,22 @@ namespace DAL.Repositories
                                 .Include(u => u.Purchases)
                                 .Include(u => u.Lots)
                                 .Include(u => u.Role)
+                                .AsNoTracking()
                                 .ToListAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} GetAllWithDetailsAsync function error", typeof(UserRepository));
-                return await GetAllAsync();
+                return null;
             }
         }
 
+        /// <summary>
+        /// Gets a single User from the database with all nested navigation properties.
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains a single <User> with the given id.
+        /// </returns>
         public async Task<User> GetByIdWithDetailsAsync(int id)
         {
             try
@@ -87,24 +89,13 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets User with id from given <User> entity and updates non-navigation properties if user is found. 
+        /// </summary>
         public override async Task UpdateAsync(User model)
         {
             var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);
-            if (existingEntity != null)
-            {
-                var users = await GetAllAsync();
-                bool isEmailExists = UserValidation.IsEmailCouldBeUpdated(users, existingEntity.Email, model.Email);
-                bool isModelHasNullProperty = UserValidation.IsModelHasNullProperty(model);
-                if (isEmailExists)
-                    throw new AuctionException("Invalid email");
 
-                if (isModelHasNullProperty)
-                    throw new AuctionException("One of the required properties is null");
-            }
-            else
-            {
-                throw new AuctionException("Id doesnt't exist");
-            }
             existingEntity.FirstName = model.FirstName;
             existingEntity.LastName = model.LastName;
             existingEntity.Password = HashHandler.HashPassword(model.Password);
@@ -113,30 +104,6 @@ namespace DAL.Repositories
             existingEntity.RoleId = model.RoleId;
         }
 
-        public void UpdatePassword(User user, UserPassword userPassword)
-        {
-            if (user != null && HashHandler.Verify(userPassword.OldPassword, user.Password))
-                user.Password = HashHandler.HashPassword(userPassword.NewPassword);
-            else
-                throw new AuctionException("Wrong password");
-        }
 
-        public async Task UpdateRole(int userId, Role role)
-        {
-            try
-            {
-                var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == userId);
-
-                if (existingEntity != null)
-                {
-                    existingEntity.RoleId = role.Id;
-                    existingEntity.Role = role;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{Repo} UpdateRoleId function error", typeof(UserRepository));
-            }
-        }
     }
 }

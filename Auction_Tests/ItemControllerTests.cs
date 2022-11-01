@@ -1,10 +1,6 @@
 ﻿using BLL.Models;
 using DAL.Entities;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
-using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -15,7 +11,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Auction_Tests
@@ -39,7 +34,7 @@ namespace Auction_Tests
 
             if (_serializerSettings == null || _jsonPublicItemInfo == null)
             {
-                //arrange
+                // Arrange
                 _serializerSettings = TestHelper.GetSerializerSettings();
                 _jsonPublicItemInfo = GetItemPublicInfoJsonData(publicItemInfo, _serializerSettings);
             }
@@ -50,10 +45,10 @@ namespace Auction_Tests
         [Test]
         public async Task GetPublicSortedByStartDate_ReturnsItemsWithDetails()
         {
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri);
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
@@ -62,10 +57,10 @@ namespace Auction_Tests
         [Test]
         public async Task GetLotsByUserId_ReturnsLotsOfSpecificUser()
         {
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "lots/user=1");
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
@@ -74,23 +69,23 @@ namespace Auction_Tests
         [Test]
         public async Task GetLotsByUserId_ReturnsUnauthorizedIfEmptyToken()
         {
-            //arrange
+            // Arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "lots/user=1");
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
         [Test]
         public async Task GetPurchasesByUserId_ReturnsLotsOfSpecificUser()
         {
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "purchases/user=2");
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
@@ -99,41 +94,45 @@ namespace Auction_Tests
         [Test]
         public async Task GetPurchasesByUserId_ReturnsUnauthorizedIfEmptyToken()
         {
-            //arrange
+            // Arrange
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "purchases/user=2");
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
 
         [Test]
         public async Task Search_ReturnsCorrectResult()
         {
-            //arrange
-            string searchInput = "test";
+            // Arrange
+            string searchInput = TestHelper.categories[0].Name;
+            var expected = new List<ItemPublicInfo>() { publicItemInfo[0] };
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + $"search={searchInput}");
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-            TestHelper.EmptyArrayResponseHandler(responseJson).Should().BeEquivalentTo(_jsonPublicItemInfo);
+            var actual = JsonConvert.DeserializeObject<IEnumerable<Item>>(responseJson).ToList();
+
+            actual.Should().BeEquivalentTo(expected, options => options
+                                                            .Excluding(i => i.ItemPhotos));
         }
 
         [Test]
         public async Task GetAll_AvailableForAdmin()
         {
-            //arrange
+            // Arrange
             var expected = TestHelper.items;
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "private");
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             var stringResponse = await httpResponse.Content.ReadAsStringAsync();
             var actual = JsonConvert.DeserializeObject<IEnumerable<Item>>(stringResponse).ToList();
@@ -149,28 +148,28 @@ namespace Auction_Tests
         [Test]
         public async Task GetAll_ReturnsForbiddenIfNotAdmin()
         {
-            //arrange
+            // Arrange
             _token = await TestHelper.GenerateToken(_client, "user");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + "private");
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         [Test]
         public async Task GetById_ReturnsCorrectItem()
         {
-            //arrange
+            // Arrange
             var expected = TestHelper.items[0];
             var ID = 1;
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + $"{ID}");
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             var stringResponse = await httpResponse.Content.ReadAsStringAsync();
             var actual = JsonConvert.DeserializeObject<Item>(stringResponse);
@@ -186,20 +185,20 @@ namespace Auction_Tests
         [Test]
         public async Task GetById_ReturnsBadRequest()
         {
-            //arrange
+            // Arrange
             var ID = "abc";
 
-            // act
+            // Act
             var httpResponse = await _client.GetAsync(RequestUri + $"{ID}");
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Test]
         public async Task Add_AddsNewItem()
         {
-            // act
+            // Act
             HttpResponseMessage httpResponse;
 
             using (var fileStream = File.OpenRead(@"StaticFiles\TestPhotos\test.jpg"))
@@ -217,13 +216,13 @@ namespace Auction_Tests
                 httpResponse = await _client.PostAsync(RequestUri, formData);
             }
 
-            // assert
+            // Assert
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             httpResponse.EnsureSuccessStatusCode();
             responseJson.Should().Contain("TestItem3");
 
             // these 2 lines delete the created image
-            var staticFileName = TestHelper.GetStringFromStartToEnd(responseJson, "veiling_", "jpg");
+            var staticFileName = TestHelper.GetStringFromStartToEndInclusive(responseJson, "veiling_", "jpg");
             File.Delete(TestHelper.GetDirectory() + @"\StaticFiles\images\" + staticFileName);
 
             httpResponse.Dispose();
@@ -232,7 +231,7 @@ namespace Auction_Tests
         [Test]
         public async Task UpdateBid_ReturnsSuccessCode()
         {
-            //arrange
+            // Arrange
             var newBid = new ItemUpdateBid
             {
                 BuyerId = TestHelper.users[1].Id,
@@ -242,10 +241,10 @@ namespace Auction_Tests
             var stringContent = new StringContent(newBidDataJson, Encoding.UTF8, "application/json");
             var itemID = "1";
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + itemID, stringContent);
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             var response = JsonConvert.DeserializeObject<Item>(responseJson);
@@ -257,7 +256,7 @@ namespace Auction_Tests
         [Test]
         public async Task Update_ReturnsSuccessCode()
         {
-            //arrange
+            // Arrange
             var inputData = new ItemPublicInfo
             {
                 Id = TestHelper.items[1].Id,
@@ -277,10 +276,10 @@ namespace Auction_Tests
             var stringContent = new StringContent(newItemDataJson, Encoding.UTF8, "application/json");
             var itemID = TestHelper.items[1].Id;
 
-            // act
+            // Act
             var httpResponse = await _client.PutAsync(RequestUri + itemID + "/edit", stringContent);
 
-            // assert
+            // Assert
             httpResponse.EnsureSuccessStatusCode();
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
             var response = JsonConvert.DeserializeObject<Item>(responseJson);
@@ -291,16 +290,16 @@ namespace Auction_Tests
         [Test]
         public async Task Delete_AvailableToAdmin()
         {
-            //arrange
+            // Arrange
             _token = await TestHelper.GenerateToken(_client, "admin");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
-            // act
+            // Act
             var getItem_BeforeDelete = await _client.GetAsync(RequestUri + "1");
             var httpResponse = await _client.DeleteAsync(RequestUri + "1");
             var getItem_AfterDelete = await _client.GetAsync(RequestUri + "1");
 
-            // assert
+            // Assert
             httpResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             getItem_BeforeDelete.EnsureSuccessStatusCode();
             getItem_AfterDelete.StatusCode.Should().Be(HttpStatusCode.NotFound);

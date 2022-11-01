@@ -82,5 +82,11 @@ namespace Auction.Middleware
                 ? null
                 : authorizationHeader.Single().Split(" ").Last();
         }
+
+        public string GetUserIdFromToken()
+        {
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(GetCurrentToken());
+            return jwt.Claims.First(c => c.Type == "Id").Value;
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using DAL.Interfaces;
+﻿using DAL.Entities.Configuration;
+using DAL.Interfaces;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System;
@@ -20,14 +21,14 @@ namespace Auction.Scheduler
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var items = await _unitOfWork.ItemRepository.FindByPredicateAsync(i => i.StatusId == 4);
+            var items = await _unitOfWork.ItemRepository.FindByPredicateAsync(i => i.StatusId == (int)Statuses.Open);
             if (items != null)
             {
                 foreach (var item in items)
                 {
                     if (item.EndSaleDate < DateTime.Now)
                     {
-                        item.StatusId = 5;
+                        item.StatusId = (int)Statuses.Closed;
                         _logger.LogInformation($"Item {item.Name} with ID {item.Id} is Closed");
                     }
                 }
