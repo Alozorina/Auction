@@ -17,13 +17,18 @@ namespace DAL.Repositories
         {
         }
 
+        /// <summary>
+        /// Gets User from the database with Role navigation property
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains a single <User> that satisfies the predicate
+        /// </returns>
         public async Task<User> GetUserWithRoleAsync(Expression<Func<User, bool>> predicate)
         {
             try
             {
                 return await dbSet
                     .Include(u => u.Role)
-                    .AsNoTracking()
                     .SingleOrDefaultAsync(predicate);
             }
             catch (Exception ex)
@@ -33,6 +38,15 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets all users from the database with navigation properties
+        /// </summary>
+        /// <remarks> 
+        /// Uses no tracking behavior
+        /// </remarks>
+        /// <returns>
+        /// Async Task. Task result contains IEnumerable<User> that contains elements from the input sequence
+        /// </returns>
         public async Task<IEnumerable<User>> GetAllWithDetailsAsync()
         {
             try
@@ -51,6 +65,12 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets a single User from the database with all nested navigation properties.
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains a single <User> with the given id.
+        /// </returns>
         public async Task<User> GetByIdWithDetailsAsync(int id)
         {
             try
@@ -60,7 +80,6 @@ namespace DAL.Repositories
                                 .Include(u => u.Lots).ThenInclude(l => l.ItemCategories).ThenInclude(ic => ic.Category)
                                 .Include(u => u.Lots).ThenInclude(l => l.Status)
                                 .Include(u => u.Role)
-                                .AsNoTracking()
                                 .SingleOrDefaultAsync(c => c.Id == id);
             }
             catch (Exception ex)
@@ -70,6 +89,9 @@ namespace DAL.Repositories
             }
         }
 
+        /// <summary>
+        /// Gets User with id from given <User> entity and updates non-navigation properties if user is found. 
+        /// </summary>
         public override async Task UpdateAsync(User model)
         {
             var existingEntity = await dbSet.FirstOrDefaultAsync(x => x.Id == model.Id);

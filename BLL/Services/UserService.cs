@@ -7,6 +7,7 @@ using DAL.Entities;
 using DAL.Entities.Configuration;
 using DAL.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using HashHandler = BCrypt.Net.BCrypt;
 
@@ -23,17 +24,27 @@ namespace Auction.Business.Services
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Gets all users from the database and maps them to <UserPulicInfo>
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains List<UserPulicInfo> that contains elements from the input sequence
+        /// </returns>
         public async Task<IEnumerable<UserPulicInfo>> GetPublicInfoAsync()
         {
             var users = await _unitOfWork.UserRepository.GetAllWithDetailsAsync();
-            List<UserPulicInfo> usersPulicInfo = new List<UserPulicInfo>();
-            foreach (var user in users)
-            {
-                usersPulicInfo.Add(_mapper.Map<UserPulicInfo>(user));
-            }
-            return usersPulicInfo;
+            return users.Select(u => _mapper.Map<UserPulicInfo>(u));
         }
 
+        /// <summary>
+        /// Gets info about User with all details
+        /// </summary>
+        /// <remarks> 
+        /// Navigation properties included
+        /// </remarks>
+        /// <returns>
+        /// Async Task. Task result contains the single User with the given ID, or throws an Argument Exception if User is null
+        /// </returns>
         public async Task<User> GetUserWithDetailsByIdAsync(int id)
         {
             var user = await _unitOfWork.UserRepository.GetByIdWithDetailsAsync(id);
@@ -41,6 +52,16 @@ namespace Auction.Business.Services
 
             return user;
         }
+
+        /// <summary>
+        /// Gets info about user without details
+        /// </summary>
+        /// <remarks> 
+        /// Navigation properties will be null
+        /// </remarks>
+        /// <returns>
+        /// Async Task. Task result contains the single user with the given ID, or throws an Argument Exception if user is null
+        /// </returns>
         public async Task<User> GetUserByIdAsync(int id)
         {
             var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
@@ -49,6 +70,18 @@ namespace Auction.Business.Services
             return user;
         }
         public UserPersonalInfoModel MapToUserPersonalInfoFromUser(User user) => _mapper.Map<User, UserPersonalInfoModel>(user);
+
+        /// <summary>
+        /// Gets info about User if given email and password are correct. 
+        /// Throws an Argument Exception if User with given email wasn't found. 
+        /// </summary>
+        /// <remarks> 
+        /// Role navigation property included.
+        /// </remarks>
+        /// <returns>
+        /// Async Task. Task result contains the single User with the given email and password, 
+        /// or null, if given password is not correct.
+        /// </returns>
         public async Task<User> LoginAsync(string email, string password)
         {
             var user = await _unitOfWork.UserRepository.GetUserWithRoleAsync(u => u.Email == email);
@@ -58,6 +91,12 @@ namespace Auction.Business.Services
             return isPasswordCorrect ? user : null;
         }
 
+        /// <summary>
+        /// Adds new User to database. User's Role by default is "User".
+        /// </summary>
+        /// <returns>
+        /// Async Task. Task result contains User that was added to database
+        /// </returns>
         public async Task<User> AddAsync(UserRegistrationModel model)
         {
             var users = _unitOfWork.UserRepository.GetAll();
@@ -75,8 +114,16 @@ namespace Auction.Business.Services
 
             return user;
         }
+
+        /// <summary>
+        /// Updates user's info with given password. If user is null, throws an exception.
+        /// If current user's password in database is not equal to "OldPassword" from the UserPassword model,
+        /// throws an Auction Exception.
+        /// </summary>
         public async Task UpdatePassword(User user, UserPassword userPassword)
         {
+            UserValidation.ThrowArgumentExceptionIfUserIsNull(user, "User wasn't found");
+
             if (user != null && HashHandler.Verify(userPassword.OldPassword, user.Password))
                 user.Password = HashHandler.HashPassword(userPassword.NewPassword);
             else
@@ -85,6 +132,10 @@ namespace Auction.Business.Services
             await _unitOfWork.SaveAsync();
         }
 
+        /// <summary>
+        /// Updates user's info with given info from <UserPersonalInfoModel>. If user is null, throws an exception.
+        /// Throws an Auction Exception if email from given info already exists in database
+        /// </summary>
         public async Task UpdatePersonalInfo(int id, UserPersonalInfoModel updateModel)
         {
             var user = await GetUserByIdAsync(id);
@@ -98,11 +149,17 @@ namespace Auction.Business.Services
             await _unitOfWork.SaveAsync();
         }
 
+        /// <summary>
+        /// Updates user's Role by given Role Id. If user is null, throws an exception.
+        /// Throws an Auction Exception if role wasn't found.
+        /// </summary>
         public async Task UpdateRoleAsync(int userId, int roleId)
         {
             var role = await _unitOfWork.RoleRepository.GetByIdAsync(roleId);
-            var existingUser = await _unitOfWork.UserRepository.GetUserWithRoleAsync(x => x.Id == userId);
+            if (role == null)
+                throw new AuctionException("Wrong role id");
 
+            var existingUser = await _unitOfWork.UserRepository.GetUserWithRoleAsync(u => u.Id == userId);
             UserValidation.ThrowArgumentExceptionIfUserIsNull(existingUser);
 
             existingUser.RoleId = role.Id;
@@ -111,6 +168,10 @@ namespace Auction.Business.Services
             await _unitOfWork.SaveAsync();
         }
 
+        /// <summary>
+        /// Updates user with id from given User model, If user is null, throws an exception.
+        /// Throws an Auction Exception if email from given info already exists in database or model has null property
+        /// </summary>
         public async Task UpdateAsync(User model)
         {
             var existingUser = await GetUserByIdAsync(model.Id);
@@ -127,19 +188,13 @@ namespace Auction.Business.Services
             existingUser.RoleId = model.RoleId;
         }
 
-
-
         /// <summary>
-        /// Removes an entity from the database if that entity Id exists in the database
+        /// Removes user from the database, 
+        /// If user wasn't found, throws an exception.
         /// </summary>
-        /// <returns>
-        /// Remove operation from EF Core for the entity with given Id 
-        /// </returns>
         public async Task DeleteByIdAsync(int id)
         {
             var user = await GetUserWithDetailsByIdAsync(id);
-            UserValidation.ThrowArgumentExceptionIfUserIsNull(user);
-
             _unitOfWork.UserRepository.Delete(user);
             await _unitOfWork.SaveAsync();
         }

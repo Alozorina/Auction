@@ -18,10 +18,10 @@ namespace BLL.Validation
             throw new AuctionException("Invalid email");
         }
 
-        public static void ThrowArgumentExceptionIfUserIsNull(User user)
+        public static void ThrowArgumentExceptionIfUserIsNull(User user, string message = "Wrong Id")
         {
-            if (user == null)
-                throw new ArgumentException("Wrong Id");
+            if (user is null)
+                throw new ArgumentException(message);
         }
 
         public static bool IsModelHasNullProperty(User model)
