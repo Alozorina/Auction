@@ -36,7 +36,6 @@ namespace Auction.Controllers
             return Ok(items);
         }
 
-        //TODO rewrite
         [ValidateToken]
         [Authorize(Roles = "Admin, User")]
         [HttpGet("lots/user={id}")]
